@@ -54,6 +54,23 @@ day even within your two drinks." Those start unset.
 Scan the QR code with your phone (same wifi as the computer). To stop the app,
 close the black window.
 
+### "This site can't be reached" on the phone
+
+Work through these in order:
+
+1. **Same wifi, actually.** Check the network name on both devices, not just
+   whether each says "connected" — a guest network and the main network are
+   different networks even with similar names, and cellular data doesn't count.
+2. **The firewall prompt.** If it didn't appear, or something other than
+   *Allow access* got clicked, close the black window and reopen
+   `start-windows.bat` to trigger it again.
+3. **Type the address instead of scanning it.** The black window prints it as
+   text above the QR code — try that in the phone's browser directly. If several
+   addresses are listed ("try one of these instead"), the first one is a guess;
+   work down the list. A laptop with a VPN client or virtual machine software
+   installed often has more than one network connection, and the wrong one can
+   get picked first.
+
 ## Running it anywhere else
 
 ```bash

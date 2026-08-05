@@ -22,14 +22,39 @@ const host = process.env.FRIDGE_HOST || '0.0.0.0';
 
 const { server, config } = createApp();
 
-/** First non-internal IPv4, so the printed URL works from a phone on the wifi. */
-function lanAddress() {
-  for (const addrs of Object.values(networkInterfaces())) {
+// Interface names that mean "not the wifi/ethernet a phone could join" — VPN
+// clients, virtual machine hosts, containers. Windows and Mac both commonly
+// report one of these ahead of the real adapter, so picking "the first
+// address" silently hands out an address only the laptop itself can reach.
+const VIRTUAL_ADAPTER = /vethernet|virtualbox|vmware|hyper-v|docker|wsl|tailscale|zerotier|tap|tun|ppp|loopback/i;
+
+/**
+ * Every non-internal IPv4 address this machine has, best guess first. A LAN
+ * address (192.168.x, 10.x, most of 172.16-31.x) from a normal-looking adapter
+ * name sorts above a VPN/VM address, and link-local (169.254.x — "no network
+ * reached") sorts last of all.
+ */
+function candidateAddresses() {
+  const found = [];
+  for (const [name, addrs] of Object.entries(networkInterfaces())) {
     for (const addr of addrs ?? []) {
-      if (addr.family === 'IPv4' && !addr.internal) return addr.address;
+      if (addr.family !== 'IPv4' || addr.internal) continue;
+      found.push({ name, address: addr.address, score: score(name, addr.address) });
     }
   }
-  return 'localhost';
+  return found.sort((a, b) => b.score - a.score);
+}
+
+function score(name, address) {
+  if (address.startsWith('169.254.')) return -2; // link-local: no network reached
+  if (VIRTUAL_ADAPTER.test(name)) return -1;
+  if (/^192\.168\.|^10\.|^172\.(1[6-9]|2\d|3[01])\./.test(address)) return 1;
+  return 0;
+}
+
+/** The address most likely to work from a phone on the office wifi. */
+function lanAddress() {
+  return candidateAddresses()[0]?.address ?? 'localhost';
 }
 
 server.on('error', (err) => {
@@ -48,6 +73,7 @@ server.on('error', (err) => {
 });
 
 server.listen(port, host, () => {
+  const candidates = candidateAddresses();
   const url = config.baseUrl || `http://${lanAddress()}:${port}/`;
   const dark = '\x1b[2m';
   const reset = '\x1b[0m';
@@ -64,6 +90,18 @@ server.listen(port, host, () => {
     console.log(`  ${dark}no admin token set — anyone on the network can edit the fridge config${reset}`);
   }
   console.log('');
+
+  // If a phone can't reach the address above, this machine has more than one
+  // network connection (often a VPN or virtual machine) and picked the wrong
+  // one first. Any other address in this list is worth typing into a phone
+  // browser directly.
+  if (!config.baseUrl && candidates.length > 1) {
+    console.log(`  ${dark}If that address doesn't load on a phone, try one of these instead:${reset}`);
+    for (const c of candidates.slice(1, 5)) {
+      console.log(`  ${dark}  http://${c.address}:${port}/  (${c.name})${reset}`);
+    }
+    console.log('');
+  }
 
   try {
     console.log(toAnsi(encode(url, { ecl: 'M' }), { border: 2 }));

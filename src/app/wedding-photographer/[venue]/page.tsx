@@ -72,13 +72,19 @@ export default async function VenuePage({ params }: Params) {
             {/* The H1 carries the exact phrase a couple who booked this venue searches. */}
             <h1>{venue.name} Wedding Photographer</h1>
 
-            {(venue.shotCount || venue.firstShotYear) && (
-              <p className="venue-head__cred">
-                {venue.shotCount
-                  ? `${venue.shotCount} ${venue.shotCount === 1 ? 'wedding' : 'weddings'} photographed at ${venue.name}`
-                  : `I have photographed weddings at ${venue.name}`}
-                {venue.firstShotYear ? ` since ${venue.firstShotYear}.` : '.'}
-              </p>
+            {/* credentialLine wins when set — a relationship with the venue
+                persuades a couple far more than a wedding count does. */}
+            {venue.credentialLine ? (
+              <p className="venue-head__cred">{venue.credentialLine}</p>
+            ) : (
+              (venue.shotCount || venue.firstShotYear) && (
+                <p className="venue-head__cred">
+                  {venue.shotCount
+                    ? `${venue.shotCount} ${venue.shotCount === 1 ? 'wedding' : 'weddings'} photographed at ${venue.name}`
+                    : `I have photographed weddings at ${venue.name}`}
+                  {venue.firstShotYear ? ` since ${venue.firstShotYear}.` : '.'}
+                </p>
+              )
             )}
 
             <div className="measure">

@@ -123,6 +123,19 @@ export type Venue = {
   /** The year of your first wedding at this venue. */
   firstShotYear?: number | null;
 
+  /**
+   * Overrides the credibility line under the H1.
+   *
+   * By default that line is built from shotCount, which is the right choice
+   * when the number is the impressive part. It is the wrong choice when you
+   * have something stronger — an in-house or preferred-vendor relationship,
+   * for instance, carries far more weight with a couple than any count does.
+   * Set this and the count is not shown.
+   *
+   * Must be true and verifiable. This is the most prominent claim on the page.
+   */
+  credentialLine?: string | null;
+
   /** Best light, and exactly when. The detail that proves you have been there. */
   lightNotes?: string | null;
 

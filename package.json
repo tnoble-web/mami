@@ -7,8 +7,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "seed": "node scripts/seed.mjs",
-    "followups": "node scripts/followups.mjs"
+    "new:venue": "node scripts/new-venue.mjs",
+    "check:venues": "tsx scripts/check-venues.ts"
   },
   "dependencies": {
     "next": "15.1.6",
@@ -20,6 +20,7 @@
     "@types/node": "22.10.7",
     "@types/react": "19.0.7",
     "@types/react-dom": "19.0.3",
+    "tsx": "^4.23.8",
     "typescript": "5.7.3"
   }
 }

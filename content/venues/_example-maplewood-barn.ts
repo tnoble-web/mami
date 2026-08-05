@@ -36,8 +36,9 @@ const venue: Venue = {
 
   title: 'Maplewood Barn Wedding Photographer | No Greater Love',
 
+  // 156 characters. `npm run check:venues` warns past 165.
   metaDescription:
-    "I've photographed eight weddings at Maplewood Barn since 2019 — here's how the light moves through the loft, where portraits work when it rains, and a timeline that fits the property.",
+    'Eight weddings photographed at Maplewood Barn since 2019 — how the light moves through the barn, where portraits work in the rain, and a timeline that fits.',
 
   intro: [
     "Maplewood Barn is a west-end property built around one very good hour. The barn itself faces southwest, so between about 6:45 and 7:30 in June the light comes in low through the big sliding door on the west wall and lands right across the dance floor. If you want the photographs everyone remembers from this venue, that half hour is what you plan the day around — I ask couples here to hold it open and step out for fifteen minutes.",

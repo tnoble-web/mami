@@ -11,17 +11,30 @@
 
 import type { Venue } from './types';
 
-// The fictional worked example. It is published: false, so it stays out of
-// the sitemap and the venue index — but you can still open it in dev to see
-// the standard to aim for. Delete this import once your real pages are up.
+// The fictional worked example. published: false, so it stays out of the
+// sitemap and the venue index — but you can open it in dev to see the standard
+// to aim for. Delete this import once your real pages are written.
 import exampleMaplewoodBarn from './_example-maplewood-barn';
 
-// --- Your venues (added by `npm run new:venue`) ---------------------------
-// import stanleysOldeMapleLaneFarm from './stanleys-olde-maple-lane-farm';
+// --- Your venues ---------------------------------------------------------
+// All six are scaffolded with verified addresses and are published: false
+// until you fill in the first-hand content. Run `npm run check:venues` to see
+// exactly what each one is still missing.
+import beanTownRanch from './bean-town-ranch';
+import canadaAviationSpaceMuseum from './canada-aviation-space-museum';
+import fairmontChateauLaurier from './fairmont-chateau-laurier';
+import leBelvedere from './le-belvedere';
+import orchardView from './orchard-view';
+import salaSanMarco from './sala-san-marco';
 
 export const allVenues: Venue[] = [
   exampleMaplewoodBarn,
-  // stanleysOldeMapleLaneFarm,
+  beanTownRanch,
+  canadaAviationSpaceMuseum,
+  fairmontChateauLaurier,
+  leBelvedere,
+  orchardView,
+  salaSanMarco,
 ];
 
 export type { Venue } from './types';

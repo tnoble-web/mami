@@ -38,7 +38,23 @@ dashboard — no code, no restart. Individual drinks can also carry their own ex
 cap on top, via **Adjust** in the stock table, for something like "one Monster a
 day even within your two drinks." Those start unset.
 
-## Running it
+## Running it on Windows (no command line needed)
+
+1. Install **Node.js** from [nodejs.org](https://nodejs.org) — the big green **LTS**
+   button. Accept every default. This needs version 22.5 or newer; the LTS
+   download is well past that.
+2. Download the code as a ZIP, right-click it → **Extract All**.
+3. Open the extracted folder and double-click **`start-windows.bat`**.
+4. A black window opens showing a QR code and a web address. **Leave it open** —
+   closing it stops the app.
+5. The first time it starts, Windows asks whether to allow Node.js through the
+   firewall. Tick **Private networks** and click **Allow access**, or phones on
+   the wifi won't be able to reach it.
+
+Scan the QR code with your phone (same wifi as the computer). To stop the app,
+close the black window.
+
+## Running it anywhere else
 
 ```bash
 npm start                     # http://localhost:8080
@@ -130,6 +146,7 @@ recommendations are getting soft.
 ## Layout
 
 ```
+start-windows.bat    double-click launcher for Windows
 bin/mami.js          startup, terminal QR, LAN address detection
 src/db.js            schema and the starter drink list
 src/stats.js         all forecasting logic — pure functions, no I/O

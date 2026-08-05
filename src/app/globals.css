@@ -1,0 +1,471 @@
+/*
+ * Deliberately plain, fast CSS — no framework.
+ *
+ * Page speed is a ranking factor and these pages are image-heavy, so the
+ * stylesheet stays small and there is no client-side CSS runtime. Restyle
+ * freely to match nogreaterlovephoto.com; nothing here is load-bearing.
+ */
+
+:root {
+  --ink: #241f1b;
+  --ink-soft: #5b524a;
+  --ink-faint: #8a7f75;
+  --paper: #fbf9f6;
+  --paper-warm: #f3ede5;
+  --rule: #e2d9cd;
+  --accent: #8c6f4e;
+  --accent-dark: #6d5539;
+
+  --serif: ui-serif, Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+  --sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+
+  --measure: 68ch;
+  --page: 1160px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1.0625rem;
+  line-height: 1.7;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--serif);
+  font-weight: 500;
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.6em;
+}
+
+h1 {
+  font-size: clamp(2rem, 5vw, 3.1rem);
+}
+h2 {
+  font-size: clamp(1.45rem, 2.8vw, 1.95rem);
+  margin-top: 0;
+}
+h3 {
+  font-size: 1.15rem;
+  font-family: var(--sans);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+p {
+  margin: 0 0 1.1em;
+}
+
+a {
+  color: var(--accent-dark);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+a:hover {
+  color: var(--ink);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.wrap {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+.measure {
+  max-width: var(--measure);
+}
+
+/* ---------------------------------------------------------------- header */
+
+.site-header {
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper);
+}
+.site-header__inner {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.15rem 1.25rem;
+  max-width: var(--page);
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+.site-header__brand {
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  text-decoration: none;
+  color: var(--ink);
+}
+.site-header__nav {
+  display: flex;
+  gap: 1.4rem;
+  font-size: 0.9rem;
+}
+.site-header__nav a {
+  text-decoration: none;
+  color: var(--ink-soft);
+}
+.site-header__nav a:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+/* ---------------------------------------------------------------- footer */
+
+.site-footer {
+  border-top: 1px solid var(--rule);
+  margin-top: 5rem;
+  padding: 2.5rem 0 3.5rem;
+  color: var(--ink-faint);
+  font-size: 0.875rem;
+}
+
+/* ------------------------------------------------------------ draft flag */
+
+.draft-banner {
+  background: #7a2e2e;
+  color: #fff;
+  padding: 0.7rem 1.25rem;
+  font-size: 0.875rem;
+  text-align: center;
+}
+.draft-banner strong {
+  font-weight: 600;
+}
+
+/* ----------------------------------------------------------- venue page */
+
+.venue-hero {
+  margin: 0;
+}
+.venue-hero img {
+  width: 100%;
+  max-height: 62vh;
+  object-fit: cover;
+}
+.venue-hero__placeholder {
+  background: var(--paper-warm);
+  border-bottom: 1px solid var(--rule);
+  padding: 3.5rem 1.25rem;
+  text-align: center;
+  color: var(--ink-faint);
+  font-size: 0.9rem;
+}
+
+.venue-head {
+  padding: 3rem 0 0;
+}
+.venue-head__eyebrow {
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 0.9rem;
+}
+.venue-head__cred {
+  color: var(--ink-soft);
+  font-size: 1.05rem;
+  border-left: 2px solid var(--accent);
+  padding-left: 1rem;
+  margin: 0 0 2rem;
+}
+
+.venue-section {
+  padding: 2.25rem 0 0;
+}
+.venue-section--ruled {
+  border-top: 1px solid var(--rule);
+  margin-top: 2.75rem;
+}
+
+.spot-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 1.35rem;
+}
+.spot-list__name {
+  font-weight: 600;
+  margin: 0 0 0.2rem;
+}
+.spot-list__note {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.tip-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.55rem;
+}
+.tip-list li {
+  color: var(--ink-soft);
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+.gallery figure {
+  margin: 0;
+}
+.gallery figcaption {
+  font-size: 0.82rem;
+  color: var(--ink-faint);
+  padding-top: 0.4rem;
+}
+
+.faq {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--rule);
+}
+.faq details {
+  border-bottom: 1px solid var(--rule);
+}
+.faq summary {
+  cursor: pointer;
+  padding: 1.1rem 0;
+  font-weight: 600;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+.faq summary::after {
+  content: '+';
+  color: var(--accent);
+  font-size: 1.3rem;
+  line-height: 1;
+  flex: none;
+}
+.faq details[open] summary::after {
+  content: '–';
+}
+.faq details > div {
+  padding: 0 0 1.2rem;
+  color: var(--ink-soft);
+  max-width: var(--measure);
+}
+
+.vendor-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 0.85rem 1.5rem;
+  font-size: 0.95rem;
+}
+.vendor-list dt {
+  color: var(--ink-faint);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* --------------------------------------------------------------- venue index */
+
+.venue-grid {
+  list-style: none;
+  padding: 0;
+  margin: 2.5rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: 2rem;
+}
+.venue-card a {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+.venue-card__thumb {
+  aspect-ratio: 4 / 3;
+  background: var(--paper-warm);
+  border: 1px solid var(--rule);
+  overflow: hidden;
+}
+.venue-card__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.venue-card h2 {
+  font-size: 1.2rem;
+  margin: 0.85rem 0 0.3rem;
+}
+.venue-card p {
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  margin: 0;
+}
+.venue-card a:hover h2 {
+  text-decoration: underline;
+}
+
+.empty-state {
+  background: var(--paper-warm);
+  border: 1px solid var(--rule);
+  padding: 2rem;
+  margin: 2.5rem 0 0;
+  color: var(--ink-soft);
+}
+.empty-state code {
+  background: #fff;
+  border: 1px solid var(--rule);
+  padding: 0.1rem 0.35rem;
+  font-size: 0.9em;
+}
+
+/* ------------------------------------------------------------------- CTA */
+
+.cta {
+  background: var(--paper-warm);
+  border: 1px solid var(--rule);
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  margin-top: 3rem;
+}
+.cta h2 {
+  margin-bottom: 0.5rem;
+}
+.cta__lede {
+  color: var(--ink-soft);
+  max-width: var(--measure);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.field {
+  display: grid;
+  gap: 0.35rem;
+}
+.field--wide {
+  grid-column: 1 / -1;
+}
+.field label {
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.field input,
+.field textarea {
+  font: inherit;
+  font-size: 1rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--rule);
+  background: #fff;
+  color: var(--ink);
+  border-radius: 2px;
+}
+.field input:focus,
+.field textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+.field textarea {
+  min-height: 7rem;
+  resize: vertical;
+}
+
+/* Spam honeypot — hidden from people, visible to bots. Not display:none,
+   because some bots skip those; off-screen is more effective. */
+.honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.btn {
+  font: inherit;
+  font-weight: 600;
+  background: var(--accent-dark);
+  color: #fff;
+  border: 0;
+  padding: 0.85rem 1.6rem;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.btn:hover:not(:disabled) {
+  background: var(--ink);
+}
+.btn:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.form-status {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 2px;
+  font-size: 0.95rem;
+}
+.form-status--ok {
+  background: #e8f0e5;
+  border: 1px solid #b9cfae;
+  color: #33502a;
+}
+.form-status--err {
+  background: #f6e6e3;
+  border: 1px solid #d9b3aa;
+  color: #7a2e2e;
+}
+.field-error {
+  color: #7a2e2e;
+  font-size: 0.82rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* ---------------------------------------------------------------- related */
+
+.related {
+  list-style: none;
+  padding: 0;
+  margin: 1.25rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.4rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a,
+  .btn {
+    transition:
+      color 120ms ease,
+      background-color 120ms ease;
+  }
+}

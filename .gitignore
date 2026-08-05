@@ -1,0 +1,16 @@
+node_modules/
+.next/
+out/
+build/
+
+# Local lead database — real client data, never commit it.
+data/
+
+# Rendered emails written to disk when no email provider is configured.
+.outbox/
+
+.env
+.env.local
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store

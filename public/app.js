@@ -5,6 +5,8 @@
  * taking one. A hard block just moves consumption off the books.
  */
 
+import { fridgeMascot, moodForDrinks } from './mascot.js';
+
 const STORE_KEY = 'fridge.person';
 
 const state = {
@@ -97,12 +99,30 @@ function showFridge() {
 }
 
 function renderAll() {
+  renderMascot();
   renderPeople();
   renderDrinks();
   renderSummary();
   renderRestockOptions();
   const chip = el('who-chip');
   if (state.me) chip.textContent = state.me.name;
+}
+
+/**
+ * The logo doubles as a status light: it pulls a face from the current stock
+ * levels, so the header says something true as well as being friendly.
+ */
+function renderMascot() {
+  const mood = moodForDrinks(state.drinks);
+  const logo = el('logo-mascot');
+  if (logo) logo.innerHTML = fridgeMascot(mood, 34);
+
+  // A bigger, glummer one fronts the "nothing in the fridge" state.
+  const art = el('empty-art');
+  if (!art) return;
+  const unstocked = state.drinks.length > 0 && state.drinks.every((d) => d.stock <= 0);
+  art.hidden = !unstocked;
+  art.innerHTML = unstocked ? fridgeMascot('sad', 96) : '';
 }
 
 function renderPeople() {

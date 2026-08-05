@@ -13,7 +13,19 @@
   --warn: #b26a00;
   --bad: #c62828;
   --shadow: 0 1px 2px rgba(16, 18, 22, .06), 0 4px 16px rgba(16, 18, 22, .06);
-  --radius: 14px;
+  --radius: 18px;
+
+  /* Mascot palette. Kept separate from the UI tokens so the drawing reads as a
+     drawing rather than as another panel. */
+  --mascot-body: #eef2f8;
+  --mascot-ink: #2f3540;
+  --mascot-handle: #9aa3b2;
+  --mascot-foot: #c6cedb;
+  --mascot-blush: #f6a5b6;
+  --art-can: #cfe0f7;
+  --art-can-alt: #ffe0b8;
+  --art-bottle: #cfeee0;
+  --art-carton: #f7dbe6;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -30,6 +42,18 @@
     --warn: #f0b429;
     --bad: #ff6b6b;
     --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .3);
+
+    /* Re-picked for the dark surface, not flipped: the body stays lighter than
+       the page so the fridge still reads as an object sitting on it. */
+    --mascot-body: #2a3038;
+    --mascot-ink: #dfe4ee;
+    --mascot-handle: #7b8494;
+    --mascot-foot: #454d58;
+    --mascot-blush: #d97a91;
+    --art-can: #2c3f57;
+    --art-can-alt: #55432a;
+    --art-bottle: #26463a;
+    --art-carton: #4d3040;
   }
 }
 
@@ -67,7 +91,47 @@ body {
   letter-spacing: -.01em;
 }
 
-.logo { font-size: 20px; }
+.logo {
+  font-size: 20px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ---------- mascot ---------- */
+
+.mascot {
+  color: var(--mascot-ink);
+  display: block;
+  overflow: visible;
+}
+
+.mascot .mascot-body { fill: var(--mascot-body); }
+.mascot .mascot-handle { fill: var(--mascot-handle); stroke: none; }
+.mascot .mascot-foot { fill: var(--mascot-foot); stroke: none; }
+.mascot .mascot-eye { fill: currentColor; stroke: none; }
+.mascot .mascot-blush { fill: var(--mascot-blush); stroke: none; }
+
+/* A slow breath, so the logo feels alive without asking to be looked at. */
+@media (prefers-reduced-motion: no-preference) {
+  .topbar .mascot { animation: mascot-bob 5s ease-in-out infinite; }
+}
+
+@keyframes mascot-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1.5px); }
+}
+
+.empty-art {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0 4px;
+}
+
+.drink-row { color: var(--mascot-ink); }
+.drink-row .art-can { fill: var(--art-can); }
+.drink-row .art-can-alt { fill: var(--art-can-alt); }
+.drink-row .art-bottle, .drink-row .art-cap { fill: var(--art-bottle); }
+.drink-row .art-carton, .drink-row .art-carton-top { fill: var(--art-carton); }
 
 .who-chip {
   font: inherit;
@@ -168,7 +232,7 @@ main {
   font-size: 16px; /* keeps iOS from zooming on focus */
   padding: 12px 14px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 14px;
   background: var(--surface);
   color: var(--text);
   min-width: 0;
@@ -211,18 +275,27 @@ main {
   color: var(--text);
   background: var(--surface);
   border: 1px solid var(--border);
-  border-left: 4px solid var(--border);
-  border-radius: var(--radius);
+  border-left: 5px solid var(--border);
+  border-radius: 20px;
   box-shadow: var(--shadow);
   cursor: pointer;
-  transition: transform .08s ease, opacity .15s ease;
+  transition: transform .1s ease, opacity .15s ease, box-shadow .1s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
-.drink-card:active, .drink-card.tapped { transform: scale(.975); }
+/* Cards behave like fridge magnets: they lift when you reach for one and press
+   in when you tap. */
+@media (hover: hover) {
+  .drink-card:hover {
+    transform: translateY(-2px) rotate(-.4deg);
+    box-shadow: 0 4px 6px rgba(16, 18, 22, .07), 0 12px 26px rgba(16, 18, 22, .1);
+  }
+}
+
+.drink-card:active, .drink-card.tapped { transform: scale(.97) rotate(0); }
 .drink-card:disabled { opacity: .55; }
 
-.drink-emoji { font-size: 26px; line-height: 1.1; }
+.drink-emoji { font-size: 30px; line-height: 1.1; }
 
 .drink-name {
   font-weight: 650;
@@ -274,7 +347,7 @@ main {
   font: inherit;
   font-weight: 600;
   padding: 13px 18px;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
@@ -339,7 +412,7 @@ main {
 
 .sheet {
   border: none;
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 22px;
   width: min(440px, calc(100vw - 32px));
   background: var(--surface);
@@ -577,6 +650,33 @@ td.num { font-variant-numeric: tabular-nums; }
   padding: 40px 32px;
   text-align: center;
   border-radius: var(--radius);
+}
+
+.print-sheet .sheet-mascot {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.print-sheet .sheet-mascot .mascot {
+  --mascot-body: #eef2f8;
+  --mascot-ink: #2f3540;
+  --mascot-handle: #9aa3b2;
+  --mascot-foot: #c6cedb;
+}
+
+.print-sheet .sheet-drinks {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 16px;
+}
+
+.print-sheet .sheet-drinks .drink-row {
+  --art-can: #cfe0f7;
+  --art-can-alt: #ffe0b8;
+  --art-bottle: #cfeee0;
+  --art-carton: #f7dbe6;
+  color: #2f3540;
 }
 
 .print-sheet .sheet-brand {

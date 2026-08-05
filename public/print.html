@@ -6,20 +6,22 @@
 <meta name="color-scheme" content="light dark">
 <title>FRIDGE · sticker to print</title>
 <link rel="stylesheet" href="/styles.css">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧊</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 42 58'><rect x='3' y='2' width='36' height='50' rx='7' fill='%23e9eef6' stroke='%232a2f37' stroke-width='3'/><path d='M3 19h36' stroke='%232a2f37' stroke-width='3'/><rect x='31' y='24' width='3.4' height='10' rx='1.7' fill='%232a2f37'/><circle cx='16.5' cy='34' r='2.6' fill='%232a2f37'/><circle cx='25.5' cy='34' r='2.6' fill='%232a2f37'/><path d='M17 41.5q5 4 10 0' fill='none' stroke='%232a2f37' stroke-width='2.6' stroke-linecap='round'/></svg>">
 </head>
 <body>
 
 <header class="topbar">
-  <div class="topbar-title"><span class="logo" aria-hidden="true">🧊</span><span>FRIDGE sticker</span></div>
+  <div class="topbar-title"><span class="logo" id="logo-mascot"></span><span>FRIDGE sticker</span></div>
   <a class="who-chip" href="/">Back</a>
 </header>
 
 <main>
   <div class="print-sheet">
+    <div class="sheet-mascot" id="sheet-mascot"></div>
     <p class="sheet-brand">FRIDGE</p>
     <h1>Grabbing a drink?</h1>
     <p class="lede">Scan this. Tap what you took. Two seconds.</p>
+    <div class="sheet-drinks" id="sheet-drinks"></div>
     <div class="qr-holder" id="qr-holder"></div>
     <p class="url" id="url-text"></p>
     <ol>
@@ -39,6 +41,12 @@
 </main>
 
 <script type="module">
+import { fridgeMascot, drinkRow } from './mascot.js';
+
+document.getElementById('logo-mascot').innerHTML = fridgeMascot('happy', 34);
+document.getElementById('sheet-mascot').innerHTML = fridgeMascot('happy', 104);
+document.getElementById('sheet-drinks').innerHTML = drinkRow(38);
+
 const params = new URLSearchParams(location.search);
 const config = await fetch('/api/config').then((r) => r.json()).catch(() => ({}));
 // Prefer an explicitly configured base URL: a phone cannot resolve "localhost".

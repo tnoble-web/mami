@@ -435,6 +435,7 @@ test('the check-in page, dashboard, and print sheet are served', async () => {
     ['/dashboard', 'FRIDGE report'],
     ['/print', 'Grabbing a drink?'],
     ['/app.js', 'takeDrink'],
+    ['/mascot.js', 'fridgeMascot'],
     ['/styles.css', '.drink-card'],
   ]) {
     const res = await fetch(`${base}${path}`);

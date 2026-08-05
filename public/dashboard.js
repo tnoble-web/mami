@@ -7,6 +7,8 @@
  * tooltips, and a table view behind every chart.
  */
 
+import { fridgeMascot, moodForDrinks } from './mascot.js';
+
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const BAR_MAX = 24;   // never let a column fill its whole band
 const BAR_GAP = 2;    // surface gap between adjacent columns
@@ -34,6 +36,7 @@ function render() {
 
   el('meta').textContent = `${r.tz} · updated ${generated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
   el('limit-select').value = r.dailyTotalLimit === null ? '' : String(r.dailyTotalLimit);
+  el('logo-mascot').innerHTML = fridgeMascot(moodForDrinks(r.drinks), 34);
 
   renderTiles(r);
   renderBuyList(r);

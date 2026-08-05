@@ -10,10 +10,9 @@
  * something is running low, glum when a shelf is empty.
  *
  * Every shape wears a class and the root sets `fill="none"
- * stroke="currentColor"`. Colours therefore live entirely in the stylesheet,
- * which is what makes one drawing work in both light and dark mode — inline
- * fills would be overridden by the CSS anyway, since presentation attributes
- * lose to stylesheet rules.
+ * stroke="currentColor"`, so colours live entirely in the stylesheet rather
+ * than as inline attributes — those would be overridden by the CSS anyway,
+ * since presentation attributes lose to stylesheet rules.
  */
 
 const MOUTHS = {

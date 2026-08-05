@@ -579,6 +579,14 @@ td.num { font-variant-numeric: tabular-nums; }
   border-radius: var(--radius);
 }
 
+.print-sheet .sheet-brand {
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .22em;
+  color: #888;
+  margin: 0 0 10px;
+}
+
 .print-sheet h1 {
   font-size: 2.1rem;
   margin: 0 0 6px;

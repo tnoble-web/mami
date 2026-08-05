@@ -13,7 +13,7 @@ const BAR_GAP = 2;    // surface gap between adjacent columns
 const RADIUS = 4;     // rounded data-end
 
 const el = (id) => document.getElementById(id);
-const state = { report: null, token: sessionStorage.getItem('mami.token') || '' };
+const state = { report: null, token: sessionStorage.getItem('fridge.token') || '' };
 
 /* ---------- data ---------- */
 
@@ -500,7 +500,7 @@ async function patch(path, body) {
     method: 'PATCH',
     headers: {
       'content-type': 'application/json',
-      ...(state.token ? { 'x-mami-token': state.token } : {}),
+      ...(state.token ? { 'x-fridge-token': state.token } : {}),
     },
     body: JSON.stringify(body),
   });
@@ -510,7 +510,7 @@ async function patch(path, body) {
     const token = prompt('Admin token required to change the fridge setup:');
     if (!token) throw new Error('Cancelled.');
     state.token = token;
-    sessionStorage.setItem('mami.token', token);
+    sessionStorage.setItem('fridge.token', token);
     res = await send();
   }
   if (!res.ok) {

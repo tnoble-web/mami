@@ -5,7 +5,7 @@
  * taking one. A hard block just moves consumption off the books.
  */
 
-const STORE_KEY = 'mami.person';
+const STORE_KEY = 'fridge.person';
 
 const state = {
   me: null,        // { id, name }

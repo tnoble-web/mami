@@ -77,7 +77,7 @@ const DEFAULT_SETTINGS = {
   daily_total_limit: '2',
 };
 
-export function openDb(path = process.env.MAMI_DB || 'data/mami.db') {
+export function openDb(path = process.env.FRIDGE_DB || 'data/fridge.db') {
   if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });
   const db = new DatabaseSync(path);
   db.exec('PRAGMA journal_mode = WAL');

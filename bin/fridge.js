@@ -17,8 +17,8 @@ if (major < 22 || (major === 22 && minor < 5)) {
 const { createApp } = await import('../src/server.js');
 const { encode, toAnsi } = await import('../src/qr.js');
 
-const port = Number.parseInt(process.env.MAMI_PORT ?? process.argv[2] ?? '8080', 10);
-const host = process.env.MAMI_HOST || '0.0.0.0';
+const port = Number.parseInt(process.env.FRIDGE_PORT ?? process.argv[2] ?? '8080', 10);
+const host = process.env.FRIDGE_HOST || '0.0.0.0';
 
 const { server, config } = createApp();
 
@@ -54,7 +54,7 @@ server.listen(port, host, () => {
   const bold = '\x1b[1m';
 
   console.log('');
-  console.log(`${bold}  mami${reset} — office drink fridge`);
+  console.log(`${bold}  FRIDGE${reset} — who is taking what, and what to reorder`);
   console.log('');
   console.log(`  check-in    ${bold}${url}${reset}`);
   console.log(`  dashboard   ${new URL('dashboard', url).href}`);

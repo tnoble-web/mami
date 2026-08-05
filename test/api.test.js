@@ -431,8 +431,8 @@ test('a QR payload too long to encode is a 400, not a crash', async () => {
 
 test('the check-in page, dashboard, and print sheet are served', async () => {
   for (const [path, needle] of [
-    ['/', 'Drink fridge'],
-    ['/dashboard', 'Fridge report'],
+    ['/', 'FRIDGE'],
+    ['/dashboard', 'FRIDGE report'],
     ['/print', 'Grabbing a drink?'],
     ['/app.js', 'takeDrink'],
     ['/styles.css', '.drink-card'],
@@ -448,7 +448,7 @@ test('path traversal cannot escape the public directory', async () => {
   for (const path of ['/../package.json', '/..%2fpackage.json', '/%2e%2e/src/db.js']) {
     const res = await fetch(`${base}${path}`);
     assert.ok(res.status === 403 || res.status === 404, `${path} leaked (${res.status})`);
-    assert.doesNotMatch(await res.text(), /"name": "mami"/);
+    assert.doesNotMatch(await res.text(), /"name": "fridge"/);
   }
 });
 
@@ -502,7 +502,7 @@ test('an admin token gates fridge configuration but never check-in', async () =>
 
     const allowed = await fetch(`${guarded}/api/drinks`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-mami-token': 'secret' },
+      headers: { 'content-type': 'application/json', 'x-fridge-token': 'secret' },
       body: JSON.stringify({ name: 'Sneaky Soda' }),
     });
     assert.equal(allowed.status, 201);

@@ -21,11 +21,11 @@ const MIME = {
 
 export function createApp(options = {}) {
   const config = {
-    tz: options.tz || process.env.MAMI_TZ || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
-    windowDays: intOr(options.windowDays ?? process.env.MAMI_WINDOW_DAYS, 14),
-    coverDays: intOr(options.coverDays ?? process.env.MAMI_COVER_DAYS, 10),
-    baseUrl: options.baseUrl || process.env.MAMI_BASE_URL || '',
-    adminToken: options.adminToken ?? process.env.MAMI_ADMIN_TOKEN ?? '',
+    tz: options.tz || process.env.FRIDGE_TZ || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    windowDays: intOr(options.windowDays ?? process.env.FRIDGE_WINDOW_DAYS, 14),
+    coverDays: intOr(options.coverDays ?? process.env.FRIDGE_COVER_DAYS, 10),
+    baseUrl: options.baseUrl || process.env.FRIDGE_BASE_URL || '',
+    adminToken: options.adminToken ?? process.env.FRIDGE_ADMIN_TOKEN ?? '',
   };
 
   const db = options.db || openDb(options.dbPath);
@@ -270,7 +270,7 @@ export function createApp(options = {}) {
 
       // Fridge configuration. Gated behind a token when one is configured.
       if (path === '/api/settings' || path === '/api/drinks' || path.startsWith('/api/drinks/')) {
-        if (config.adminToken && req.headers['x-mami-token'] !== config.adminToken) {
+        if (config.adminToken && req.headers['x-fridge-token'] !== config.adminToken) {
           return json(res, 401, { error: 'Admin token required.' });
         }
 
@@ -348,7 +348,7 @@ export function createApp(options = {}) {
     } catch (err) {
       if (err.code === 'BODY_TOO_LARGE') return json(res, 413, { error: 'Request too large.' });
       if (err.code === 'BAD_JSON') return json(res, 400, { error: 'Invalid JSON body.' });
-      process.emitWarning(`mami: ${err.stack || err.message}`);
+      process.emitWarning(`fridge: ${err.stack || err.message}`);
       return json(res, 500, { error: 'Something went wrong.' });
     }
   };

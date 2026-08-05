@@ -5,7 +5,7 @@ rem Double-click launcher for Windows. Runs from wherever this file lives, so it
 rem works straight out of the downloaded folder with no command line needed.
 cd /d "%~dp0"
 
-title Drink fridge
+title FRIDGE
 
 where node >nul 2>nul
 if errorlevel 1 (
@@ -21,13 +21,13 @@ if errorlevel 1 (
 )
 
 echo.
-echo   Starting the drink fridge. Leave this window open while people use it.
+echo   Starting FRIDGE. Leave this window open while people use it.
 echo   Press Ctrl+C, or just close this window, to stop it.
 echo.
 
-node --no-warnings bin\mami.js %*
+node --no-warnings bin\fridge.js %*
 
 echo.
-echo   The drink fridge has stopped.
+echo   FRIDGE has stopped.
 echo.
 pause

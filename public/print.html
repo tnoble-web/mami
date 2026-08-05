@@ -4,19 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<title>Fridge sticker · print</title>
+<title>FRIDGE · sticker to print</title>
 <link rel="stylesheet" href="/styles.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧊</text></svg>">
 </head>
 <body>
 
 <header class="topbar">
-  <div class="topbar-title"><span class="logo" aria-hidden="true">🧊</span><span>Fridge sticker</span></div>
+  <div class="topbar-title"><span class="logo" aria-hidden="true">🧊</span><span>FRIDGE sticker</span></div>
   <a class="who-chip" href="/">Back</a>
 </header>
 
 <main>
   <div class="print-sheet">
+    <p class="sheet-brand">FRIDGE</p>
     <h1>Grabbing a drink?</h1>
     <p class="lede">Scan this. Tap what you took. Two seconds.</p>
     <div class="qr-holder" id="qr-holder"></div>
@@ -50,7 +51,7 @@ document.getElementById('qr-holder').innerHTML =
 const hint = document.getElementById('hint');
 if (/localhost|127\.0\.0\.1/.test(target)) {
   hint.textContent = 'Heads up: this code points at localhost, which phones cannot reach. '
-    + 'Set MAMI_BASE_URL to the machine’s network address and reload.';
+    + 'Set FRIDGE_BASE_URL to the machine’s network address and reload.';
 } else {
   hint.textContent = 'Tape it to the fridge door at eye level.';
 }

@@ -3,16 +3,16 @@
  * Fill a database with a month of plausible history so the dashboard can be
  * demoed (or screenshotted) before anyone has actually used it.
  *
- *   MAMI_DB=data/demo.db node scripts/seed-demo.js
+ *   FRIDGE_DB=data/demo.db node scripts/seed-demo.js
  *
  * Refuses to touch a database that already has real check-ins unless --force.
  */
 import { openDb, seedDrinks, seedSettings, getSetting } from '../src/db.js';
 import { dayKey } from '../src/stats.js';
 
-const TZ = process.env.MAMI_TZ || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+const TZ = process.env.FRIDGE_TZ || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 const force = process.argv.includes('--force');
-const dbPath = process.env.MAMI_DB || 'data/demo.db';
+const dbPath = process.env.FRIDGE_DB || 'data/demo.db';
 const db = openDb(dbPath);
 seedDrinks(db);
 seedSettings(db);

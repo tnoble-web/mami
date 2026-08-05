@@ -1,4 +1,4 @@
-# mami
+# FRIDGE
 
 A check-in tool for the office drink fridge. Scan the QR code on the fridge door,
 tap what you took, done in about two seconds. In return you get a report that
@@ -64,10 +64,10 @@ Put it on any always-on machine on the office network — a spare Mac mini, a NU
 a small VPS. Then:
 
 ```bash
-MAMI_BASE_URL=http://fridge.office.example:8080 npm start
+FRIDGE_BASE_URL=http://fridge.office.example:8080 npm start
 ```
 
-Setting `MAMI_BASE_URL` matters: it's the address baked into the QR code, and a
+Setting `FRIDGE_BASE_URL` matters: it's the address baked into the QR code, and a
 phone can't resolve `localhost`. Open `/print`, print the sheet, tape it to the
 fridge at eye level.
 
@@ -89,14 +89,14 @@ says as much until you do.
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `MAMI_PORT` | `8080` | Port to listen on |
-| `MAMI_HOST` | `0.0.0.0` | Interface to bind |
-| `MAMI_DB` | `data/mami.db` | SQLite file; created on first run |
-| `MAMI_TZ` | system zone | IANA timezone that defines "today" for the fridge |
-| `MAMI_BASE_URL` | — | Public URL encoded into the QR code |
-| `MAMI_WINDOW_DAYS` | `14` | Trailing days used to measure consumption |
-| `MAMI_COVER_DAYS` | `10` | Workdays of stock a restock should cover |
-| `MAMI_ADMIN_TOKEN` | — | If set, editing drinks requires this token |
+| `FRIDGE_PORT` | `8080` | Port to listen on |
+| `FRIDGE_HOST` | `0.0.0.0` | Interface to bind |
+| `FRIDGE_DB` | `data/fridge.db` | SQLite file; created on first run |
+| `FRIDGE_TZ` | system zone | IANA timezone that defines "today" for the fridge |
+| `FRIDGE_BASE_URL` | — | Public URL encoded into the QR code |
+| `FRIDGE_WINDOW_DAYS` | `14` | Trailing days used to measure consumption |
+| `FRIDGE_COVER_DAYS` | `10` | Workdays of stock a restock should cover |
+| `FRIDGE_ADMIN_TOKEN` | — | If set, editing drinks requires this token |
 
 Getting the timezone right matters more than it sounds: a 6pm drink has to count
 toward Monday, not Tuesday-in-UTC.
@@ -104,8 +104,8 @@ toward Monday, not Tuesday-in-UTC.
 ### Try it with realistic data first
 
 ```bash
-MAMI_DB=data/demo.db npm run seed
-MAMI_DB=data/demo.db npm start
+FRIDGE_DB=data/demo.db npm run seed
+FRIDGE_DB=data/demo.db npm start
 ```
 
 That fills a throwaway database with a month of plausible history — six people,
@@ -147,7 +147,7 @@ recommendations are getting soft.
 
 ```
 start-windows.bat    double-click launcher for Windows
-bin/mami.js          startup, terminal QR, LAN address detection
+bin/fridge.js        startup, terminal QR, LAN address detection
 src/db.js            schema and the starter drink list
 src/stats.js         all forecasting logic — pure functions, no I/O
 src/server.js        HTTP API and static file serving
@@ -184,6 +184,6 @@ logging slower than not logging, and the threat model is "coworkers and a
 fridge." Anyone who can reach the server can log a drink as anyone.
 
 Two things follow from that: keep it on the office network rather than the public
-internet, and set `MAMI_ADMIN_TOKEN` if you don't want everyone able to
+internet, and set `FRIDGE_ADMIN_TOKEN` if you don't want everyone able to
 reconfigure the drink list. Consumption is attributed by name, so treat the
 dashboard as what it is — a shared record of who drinks what.

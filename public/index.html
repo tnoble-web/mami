@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d10">
+<meta name="color-scheme" content="light dark">
+<title>Drink fridge · check in</title>
+<link rel="stylesheet" href="/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧊</text></svg>">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-title">
+    <span class="logo" aria-hidden="true">🧊</span>
+    <span>Drink fridge</span>
+  </div>
+  <button id="who-chip" class="who-chip" hidden aria-label="Change who you are"></button>
+</header>
+
+<main id="app">
+
+  <!-- Screen 1: identify yourself -->
+  <section id="screen-who" class="screen" hidden>
+    <h1 class="screen-title">Who's grabbing a drink?</h1>
+    <p class="screen-sub">Tap your name. We'll remember it on this phone.</p>
+    <div id="people-list" class="people-list"></div>
+    <form id="new-person-form" class="new-person">
+      <input id="new-person-name" type="text" placeholder="Your name" autocomplete="name"
+             maxlength="40" enterkeyhint="done" aria-label="Your name">
+      <button type="submit" class="btn btn-primary">Add me</button>
+    </form>
+    <p id="who-error" class="error" role="alert" hidden></p>
+  </section>
+
+  <!-- Screen 2: the fridge -->
+  <section id="screen-fridge" class="screen" hidden>
+    <div class="summary">
+      <div id="my-count" class="summary-main">—</div>
+      <div id="fridge-count" class="summary-sub"></div>
+    </div>
+    <p id="setup-hint" class="notice" hidden>
+      Nobody has told the app what's in the fridge yet, so everything reads empty.
+      Tap <strong>I restocked the fridge</strong> below and enter what's on each shelf —
+      you only have to do it once.
+    </p>
+    <div id="drink-grid" class="drink-grid" role="list"></div>
+    <div class="actions">
+      <button id="restock-btn" class="btn btn-quiet">📦 I restocked the fridge</button>
+      <a class="btn btn-quiet" href="/dashboard">📊 Fridge report</a>
+    </div>
+    <p class="footnote">
+      Logging takes two seconds and it's the only reason we know what to buy.
+      Nothing here blocks you from taking a drink.
+    </p>
+  </section>
+
+</main>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden>
+  <span id="toast-text"></span>
+  <button id="toast-undo" class="toast-undo" hidden>Undo</button>
+</div>
+
+<!-- Over-the-limit nudge -->
+<dialog id="confirm-sheet" class="sheet">
+  <form method="dialog">
+    <h2 id="confirm-title">Are you sure?</h2>
+    <p id="confirm-body"></p>
+    <div class="sheet-actions">
+      <button value="cancel" class="btn btn-quiet">Not today</button>
+      <button value="confirm" class="btn btn-primary" id="confirm-yes">Take it anyway</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Restock -->
+<dialog id="restock-sheet" class="sheet">
+  <form id="restock-form">
+    <h2>Restocked the fridge</h2>
+    <label class="field">
+      <span>Drink</span>
+      <select id="restock-drink" required></select>
+    </label>
+    <label class="field">
+      <span>How many did you put in?</span>
+      <input id="restock-qty" type="number" inputmode="numeric" min="0" max="500" step="1" value="12" required>
+    </label>
+    <label class="field">
+      <span>How many were left on the shelf first? <em>(optional)</em></span>
+      <input id="restock-counted" type="number" inputmode="numeric" min="0" max="500" step="1"
+             placeholder="Leave blank if you didn't count">
+      <small>Counting keeps the numbers honest — it tells us how many went unlogged.</small>
+    </label>
+    <p id="restock-error" class="error" role="alert" hidden></p>
+    <div class="sheet-actions">
+      <button type="button" value="cancel" class="btn btn-quiet" data-close>Cancel</button>
+      <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<script type="module" src="/app.js"></script>
+</body>
+</html>

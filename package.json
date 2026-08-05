@@ -1,0 +1,19 @@
+{
+  "name": "mami",
+  "version": "1.0.0",
+  "description": "Office drink fridge check-in and restock forecasting. Zero dependencies.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "bin": {
+    "mami": "./bin/mami.js"
+  },
+  "scripts": {
+    "start": "node --no-warnings bin/mami.js",
+    "test": "node --no-warnings --test test/*.test.js",
+    "seed": "node --no-warnings scripts/seed-demo.js"
+  },
+  "license": "MIT",
+  "private": true
+}

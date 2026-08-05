@@ -122,4 +122,29 @@ export function setSetting(db, key, value) {
   ).run(key, String(value));
 }
 
+/**
+ * Wipes everyone's check-ins, restock history, and people — the things that
+ * accumulate from actually using the fridge — while leaving the drink list
+ * exactly as configured: names, emoji, categories, par levels, case sizes,
+ * per-drink limits, and the house daily limit all survive untouched.
+ *
+ * Stock counts reset to zero rather than being left as-is, since a number
+ * with no history behind it is a guess someone will need to re-enter as a
+ * real count anyway.
+ *
+ * @returns {{people: number, takes: number, restocks: number}} counts of what was removed
+ */
+export function clearActivity(db) {
+  const before = {
+    people: db.prepare('SELECT COUNT(*) AS n FROM people').get().n,
+    takes: db.prepare('SELECT COUNT(*) AS n FROM takes').get().n,
+    restocks: db.prepare('SELECT COUNT(*) AS n FROM restocks').get().n,
+  };
+  db.exec('DELETE FROM takes');
+  db.exec('DELETE FROM restocks');
+  db.exec('DELETE FROM people');
+  db.exec('UPDATE drinks SET stock = 0');
+  return before;
+}
+
 export { DEFAULT_DRINKS, DEFAULT_SETTINGS };

@@ -71,6 +71,18 @@ Work through these in order:
    installed often has more than one network connection, and the wrong one can
    get picked first.
 
+### Starting over
+
+Double-click **`clear-data-windows.bat`**. It removes every person and
+everything they've logged — check-ins, restocks — and resets all stock counts
+to 0. It does **not** touch anything you've set up: drink names, daily limits,
+and par levels all survive exactly as they were. This is what you want after
+testing the app yourself, before real use begins.
+
+For a true out-of-the-box reset — including any drink customizing — close the
+app, delete `data\fridge.db` (and `fridge.db-wal` / `fridge.db-shm` if
+present) from the extracted folder, and start it again.
+
 ## Running it anywhere else
 
 ```bash
@@ -163,14 +175,17 @@ recommendations are getting soft.
 ## Layout
 
 ```
-start-windows.bat    double-click launcher for Windows
+start-windows.bat       double-click launcher for Windows
+clear-data-windows.bat  double-click reset: people & history, keeps drink setup
 bin/fridge.js        startup, terminal QR, LAN address detection
-src/db.js            schema and the starter drink list
+src/netinfo.js       picks the LAN address for the QR code, skipping VPNs/VMs
+src/db.js            schema, starter drink list, and the data-clearing logic
 src/stats.js         all forecasting logic — pure functions, no I/O
 src/server.js        HTTP API and static file serving
 src/qr.js            QR encoder (byte mode, no dependencies)
 public/              check-in app, dashboard, print sheet
 scripts/seed-demo.js demo history generator
+scripts/clear-data.js wipes people/history, keeps drink setup
 test/                unit and API tests
 ```
 

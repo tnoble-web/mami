@@ -63,7 +63,7 @@ const venue: Venue = {
   faqs: [], // TODO — four questions, phrased the way a couple asks them
 
   vendors: [],
-  relatedVenueSlugs: ['orchard-view', 'bean-town-ranch'],
+  relatedVenueSlugs: ['orchardview', 'bean-town-ranch'],
 
   published: false,
 };

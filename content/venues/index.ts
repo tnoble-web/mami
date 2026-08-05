@@ -24,7 +24,7 @@ import beanTownRanch from './bean-town-ranch';
 import canadaAviationSpaceMuseum from './canada-aviation-space-museum';
 import fairmontChateauLaurier from './fairmont-chateau-laurier';
 import leBelvedere from './le-belvedere';
-import orchardView from './orchard-view';
+import orchardview from './orchardview';
 import salaSanMarco from './sala-san-marco';
 
 export const allVenues: Venue[] = [
@@ -33,7 +33,7 @@ export const allVenues: Venue[] = [
   canadaAviationSpaceMuseum,
   fairmontChateauLaurier,
   leBelvedere,
-  orchardView,
+  orchardview,
   salaSanMarco,
 ];
 

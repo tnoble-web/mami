@@ -63,7 +63,7 @@ const venue: Venue = {
   faqs: [], // TODO
 
   vendors: [],
-  relatedVenueSlugs: ['orchard-view', 'le-belvedere'],
+  relatedVenueSlugs: ['orchardview', 'le-belvedere'],
 
   published: false,
 };

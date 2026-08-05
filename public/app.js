@@ -14,6 +14,7 @@ const state = {
   myToday: 0,
   byDrinkToday: {},
   fridgeToday: 0,
+  dailyLimit: null, // drinks per person per day, all kinds counted together
 };
 
 const el = (id) => document.getElementById(id);
@@ -72,6 +73,7 @@ async function refresh(personId = state.me?.id) {
   state.myToday = data.me?.today ?? 0;
   state.byDrinkToday = data.me?.byDrinkToday ?? {};
   state.fridgeToday = data.totals?.today ?? 0;
+  state.dailyLimit = data.dailyLimit ?? null;
   if (data.me && state.me) state.me.name = data.me.name;
   renderAll();
 }
@@ -121,12 +123,26 @@ function renderPeople() {
 
 function renderSummary() {
   const mine = state.myToday;
-  el('my-count').textContent = mine === 0
-    ? 'Nothing logged today'
-    : `${mine} drink${mine === 1 ? '' : 's'} today`;
-  el('fridge-count').textContent = state.fridgeToday === 0
+  const limit = state.dailyLimit;
+
+  // Showing progress against the limit ("1 of 2 today") does the reminding on
+  // its own, before anyone has to be told they're over. The headline stays short
+  // enough for one line on a phone; the detail goes underneath it.
+  if (limit === null) {
+    el('my-count').textContent = mine === 0
+      ? 'Nothing logged today'
+      : `${mine} drink${mine === 1 ? '' : 's'} today`;
+  } else {
+    el('my-count').textContent = `${mine} of ${limit} today`;
+  }
+
+  const sub = [];
+  if (limit !== null && mine > limit) sub.push(`Over your limit of ${limit}.`);
+  else if (limit !== null && mine === limit) sub.push("That's your limit for today.");
+  sub.push(state.fridgeToday === 0
     ? 'Be the first to log one today.'
-    : `${state.fridgeToday} taken from the fridge today.`;
+    : `${state.fridgeToday} taken from the fridge today.`);
+  el('fridge-count').textContent = sub.join(' ');
 
   // A fresh install knows the drink list but not what's physically on the shelf,
   // so every card reads empty until someone enters the starting counts once.
@@ -202,7 +218,7 @@ async function takeDrink(drink, card) {
 
     // Server says this take is over the person's soft daily limit: ask, don't refuse.
     if (result.needsConfirm) {
-      const proceed = await confirmOverLimit(drink, result.limit.message);
+      const proceed = await confirmOverLimit(drink, result.limit);
       if (!proceed) {
         toast(`No ${drink.name}. Respect.`);
         return;
@@ -225,7 +241,9 @@ async function takeDrink(drink, card) {
 }
 
 function toastTake(drink, result) {
-  const n = result.takenToday;
+  // Count the day's total, not this drink's: the limit people are held to is
+  // "two drinks", not "two Monsters".
+  const n = result.takenTodayTotal ?? result.takenToday;
   const parts = [`${drink.emoji} ${drink.name} logged`];
 
   if (result.limit?.overLimit) parts.push(`${ordinal(n)} today, over your limit`);
@@ -238,10 +256,15 @@ function toastTake(drink, result) {
   toast(parts.join(' · '), { undo: true });
 }
 
-function confirmOverLimit(drink, message) {
+function confirmOverLimit(drink, limit) {
   const sheet = el('confirm-sheet');
-  el('confirm-title').textContent = `Another ${drink.name}?`;
-  el('confirm-body').textContent = message || `You're over your daily limit for ${drink.name}.`;
+  // The house rule counts drinks, not kinds — so say "another drink", not
+  // "another Monster", when that's the rule being crossed.
+  el('confirm-title').textContent = limit?.scope === 'day'
+    ? 'Take another drink?'
+    : `Another ${drink.name}?`;
+  el('confirm-body').textContent = limit?.message
+    || `You're over your daily limit for ${drink.name}.`;
   sheet.showModal();
   return new Promise((resolve) => {
     sheet.addEventListener('close', () => resolve(sheet.returnValue === 'confirm'), { once: true });

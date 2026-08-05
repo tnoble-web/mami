@@ -2,8 +2,8 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { openDb, seedDrinks } from './db.js';
-import { report, limitCheck, dayKey } from './stats.js';
+import { openDb, seedDrinks, seedSettings, getSetting, setSetting } from './db.js';
+import { report, limitCheck, dailyTotalCheck, dayKey } from './stats.js';
 import { encode, toSvg } from './qr.js';
 
 const PUBLIC_DIR = fileURLToPath(new URL('../public/', import.meta.url));
@@ -30,6 +30,15 @@ export function createApp(options = {}) {
 
   const db = options.db || openDb(options.dbPath);
   if (options.seed !== false) seedDrinks(db);
+  seedSettings(db);
+
+  /** The house limit lives in the database so it can be changed from the dashboard. */
+  function dailyLimit() {
+    const raw = getSetting(db, 'daily_total_limit');
+    if (raw === null || raw === '') return null;
+    const n = Number.parseInt(raw, 10);
+    return Number.isFinite(n) && n >= 0 ? n : null;
+  }
 
   const q = {
     drinks: db.prepare('SELECT * FROM drinks WHERE active = 1 ORDER BY sort_order, name'),
@@ -74,17 +83,50 @@ export function createApp(options = {}) {
       tz: config.tz,
       windowDays: days,
       coverDays: cover,
+      dailyTotalLimit: dailyLimit(),
     });
   }
 
-  /** Count of a drink taken by a person today, used for the soft limit nudge. */
-  function takenTodayBy(personId, drinkId) {
+  /**
+   * What one person has taken today — the total across every drink, plus the
+   * per-drink breakdown. Both are needed: the house rule counts the total, and
+   * a drink may carry its own cap on top.
+   */
+  function todayFor(personId) {
     const todayKey = dayKey(new Date(), config.tz);
     const rows = q.takesSince.all(new Date(Date.now() - 2 * 86400000).toISOString());
-    return rows
-      .filter((t) => t.person_id === personId && t.drink_id === drinkId
-        && dayKey(t.created_at, config.tz) === todayKey)
-      .reduce((s, t) => s + t.qty, 0);
+    let total = 0;
+    const byDrink = new Map();
+    for (const t of rows) {
+      if (t.person_id !== personId) continue;
+      if (dayKey(t.created_at, config.tz) !== todayKey) continue;
+      total += t.qty;
+      byDrink.set(t.drink_id, (byDrink.get(t.drink_id) ?? 0) + t.qty);
+    }
+    return { total, byDrink };
+  }
+
+  /**
+   * Combine the house daily total with any per-drink cap. Whichever rule is hit
+   * drives the nudge, with the house total taking precedence since it's the one
+   * that governs how fast the fridge empties.
+   */
+  function checkLimits({ drink, today, qty }) {
+    const house = dailyTotalCheck({ limit: dailyLimit(), takenToday: today.total, qty });
+    const perDrink = limitCheck({ drink, takenToday: today.byDrink.get(drink.id) ?? 0, qty });
+
+    const active = house.overLimit ? house
+      : perDrink.overLimit ? perDrink
+      : house.message ? house
+      : perDrink;
+    const remainings = [house.remaining, perDrink.remaining].filter((r) => typeof r === 'number');
+
+    return {
+      overLimit: house.overLimit || perDrink.overLimit,
+      remaining: remainings.length ? Math.min(...remainings) : null,
+      message: active.message,
+      scope: active === house ? 'day' : 'drink',
+    };
   }
 
   const handler = async (req, res) => {
@@ -105,6 +147,7 @@ export function createApp(options = {}) {
             windowDays: config.windowDays,
             coverDays: config.coverDays,
             baseUrl: config.baseUrl,
+            dailyLimit: dailyLimit(),
             adminRequired: Boolean(config.adminToken),
           });
         }
@@ -148,8 +191,9 @@ export function createApp(options = {}) {
         if (!drink) return json(res, 400, { error: 'Unknown drink.' });
         const qty = clamp(intOr(body.qty, 1), 1, 12);
 
-        const takenToday = takenTodayBy(person.id, drink.id);
-        const limit = limitCheck({ drink, takenToday, qty });
+        const today = todayFor(person.id);
+        const takenToday = today.byDrink.get(drink.id) ?? 0;
+        const limit = checkLimits({ drink, today, qty });
 
         // The nudge is advisory: unless the client explicitly acknowledged it we
         // return it without logging, so the UI can confirm. Once acknowledged
@@ -161,6 +205,7 @@ export function createApp(options = {}) {
             limit,
             drink,
             takenToday,
+            takenTodayTotal: today.total,
           });
         }
 
@@ -173,6 +218,7 @@ export function createApp(options = {}) {
           drink: updated,
           limit,
           takenToday: takenToday + qty,
+          takenTodayTotal: today.total + qty,
           lowStock: updated.stock <= 0 ? 'out' : updated.stock <= 3 ? 'low' : null,
         });
       }
@@ -223,9 +269,28 @@ export function createApp(options = {}) {
       }
 
       // Fridge configuration. Gated behind a token when one is configured.
-      if (path === '/api/drinks' || path.startsWith('/api/drinks/')) {
+      if (path === '/api/settings' || path === '/api/drinks' || path.startsWith('/api/drinks/')) {
         if (config.adminToken && req.headers['x-mami-token'] !== config.adminToken) {
           return json(res, 401, { error: 'Admin token required.' });
+        }
+
+        if (path === '/api/settings') {
+          if (req.method !== 'PATCH' && req.method !== 'PUT') {
+            return json(res, 405, { error: `${req.method} not supported here.` });
+          }
+          if (Object.hasOwn(body, 'daily_total_limit')) {
+            const raw = body.daily_total_limit;
+            // An empty value means "no house limit at all".
+            if (raw === null || raw === '') setSetting(db, 'daily_total_limit', '');
+            else {
+              const n = intOr(raw, NaN);
+              if (!Number.isFinite(n) || n < 0 || n > 99) {
+                return json(res, 400, { error: 'The daily limit must be a whole number from 0 to 99, or blank for none.' });
+              }
+              setSetting(db, 'daily_total_limit', n);
+            }
+          }
+          return json(res, 200, { dailyLimit: dailyLimit() });
         }
 
         if (req.method === 'POST' && path === '/api/drinks') {
@@ -295,6 +360,7 @@ export function createApp(options = {}) {
     return {
       today: rep.todayKey,
       tz: config.tz,
+      dailyLimit: rep.dailyTotalLimit,
       drinks: rep.drinks.map((d) => ({
         id: d.id, name: d.name, emoji: d.emoji, category: d.category,
         stock: d.stock, status: d.status, daily_limit: d.daily_limit,

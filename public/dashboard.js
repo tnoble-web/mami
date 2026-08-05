@@ -33,6 +33,7 @@ function render() {
   const generated = new Date(r.generatedAt);
 
   el('meta').textContent = `${r.tz} · updated ${generated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+  el('limit-select').value = r.dailyTotalLimit === null ? '' : String(r.dailyTotalLimit);
 
   renderTiles(r);
   renderBuyList(r);
@@ -386,8 +387,10 @@ function statusWord(d) {
 
 function renderPeopleTable(r) {
   const loggers = r.people.filter((p) => p.windowTotal > 0);
+  const limitNote = r.dailyTotalLimit === null ? ''
+    : ` · limit is ${r.dailyTotalLimit} a day`;
   el('people-sub').textContent = loggers.length
-    ? `${loggers.length} people logging · fair share is ${r.totals.fairShare} each over ${r.windowDays} days.`
+    ? `${loggers.length} people logging · fair share is ${r.totals.fairShare} each over ${r.windowDays} days${limitNote}.`
     : 'Nobody has logged a drink yet.';
 
   if (!loggers.length) {
@@ -396,8 +399,12 @@ function renderPeopleTable(r) {
     return;
   }
 
+  const hasLimit = r.dailyTotalLimit !== null;
+  const headers = ['Person', 'Today', `Last ${r.windowDays}d`, 'Per workday', 'vs fair share'];
+  if (hasLimit) headers.push('Days over');
+
   const table = node('table');
-  table.append(headRow(['Person', 'Today', `Last ${r.windowDays}d`, 'Per workday', 'vs fair share']));
+  table.append(headRow(headers));
   const tbody = node('tbody');
   for (const p of loggers) {
     const tr = node('tr');
@@ -406,6 +413,7 @@ function renderPeopleTable(r) {
     const delta = r.totals.fairShare > 0
       ? Math.round((p.windowTotal / r.totals.fairShare) * 100) : 0;
     tr.append(numCell(delta ? `${delta}%` : '—'));
+    if (hasLimit) tr.append(numCell(p.overLimitDays > 0 ? String(p.overLimitDays) : '—'));
     tbody.append(tr);
   }
   table.append(tbody);
@@ -441,6 +449,7 @@ let editing = null;
 function openEdit(drink) {
   editing = drink;
   el('edit-title').textContent = `${drink.emoji} ${drink.name}`;
+  el('edit-name').value = drink.name;
   el('edit-stock').value = drink.stock;
   el('edit-par').value = drink.par_level;
   el('edit-case').value = drink.case_size;
@@ -460,25 +469,20 @@ el('edit-form').addEventListener('submit', async (event) => {
   const limit = el('edit-limit').value;
 
   const body = {
+    name: el('edit-name').value.trim(),
     stock: Number(el('edit-stock').value),
     par_level: Number(el('edit-par').value),
     case_size: Number(el('edit-case').value),
     daily_limit: limit === '' ? null : Number(limit),
   };
+  if (!body.name) {
+    errorBox.textContent = 'The drink needs a name.';
+    errorBox.hidden = false;
+    return;
+  }
 
   try {
-    let res = await send(body);
-    if (res.status === 401) {
-      const token = prompt('Admin token required to change the fridge setup:');
-      if (!token) return;
-      state.token = token;
-      sessionStorage.setItem('mami.token', token);
-      res = await send(body);
-    }
-    if (!res.ok) {
-      const payload = await res.json().catch(() => ({}));
-      throw new Error(payload.error || `Save failed (${res.status})`);
-    }
+    await patch(`/api/drinks/${editing.id}`, body);
     el('edit-sheet').close();
     await load();
   } catch (err) {
@@ -487,12 +491,33 @@ el('edit-form').addEventListener('submit', async (event) => {
   }
 });
 
-function send(body) {
-  return fetch(`/api/drinks/${editing.id}`, {
+/**
+ * PATCH something behind the admin gate, asking for the token once if the
+ * server wants one and remembering it for the rest of the session.
+ */
+async function patch(path, body) {
+  const send = () => fetch(path, {
     method: 'PATCH',
-    headers: { 'content-type': 'application/json', ...(state.token ? { 'x-mami-token': state.token } : {}) },
+    headers: {
+      'content-type': 'application/json',
+      ...(state.token ? { 'x-mami-token': state.token } : {}),
+    },
     body: JSON.stringify(body),
   });
+
+  let res = await send();
+  if (res.status === 401) {
+    const token = prompt('Admin token required to change the fridge setup:');
+    if (!token) throw new Error('Cancelled.');
+    state.token = token;
+    sessionStorage.setItem('mami.token', token);
+    res = await send();
+  }
+  if (!res.ok) {
+    const payload = await res.json().catch(() => ({}));
+    throw new Error(payload.error || `Save failed (${res.status})`);
+  }
+  return res.json().catch(() => ({}));
 }
 
 /* ---------- tooltip ---------- */
@@ -561,6 +586,18 @@ function formatHour(h) {
 
 el('window-select').addEventListener('change', () => load().catch(showError));
 el('cover-select').addEventListener('change', () => load().catch(showError));
+
+el('limit-select').addEventListener('change', async (event) => {
+  const value = event.target.value;
+  try {
+    await patch('/api/settings', { daily_total_limit: value === '' ? null : Number(value) });
+    await load();
+  } catch (err) {
+    // Put the control back where it was rather than lying about the saved value.
+    event.target.value = state.report?.dailyTotalLimit ?? '';
+    if (err.message !== 'Cancelled.') alert(err.message);
+  }
+});
 
 function showError(err) {
   el('tiles').replaceChildren(text('p', 'error', `Could not load the report. ${err.message}`));

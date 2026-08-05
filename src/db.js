@@ -44,22 +44,38 @@ CREATE TABLE IF NOT EXISTS restocks (
   created_at      TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
 );
 
+CREATE TABLE IF NOT EXISTS settings (
+  key   TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_takes_created  ON takes(created_at);
 CREATE INDEX IF NOT EXISTS idx_takes_drink    ON takes(drink_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_takes_person   ON takes(person_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_restock_drink  ON restocks(drink_id, created_at);
 `;
 
-// The drinks the office actually stocks today. Editable from the dashboard once
-// running; this is only what a brand-new fridge starts with.
+/**
+ * The drinks the office actually stocks. Editable from the dashboard once
+ * running; this is only what a brand-new fridge starts with.
+ *
+ * `daily_limit` here is an optional *per-drink* cap ("no more than one Monster
+ * a day"). It starts unset on every drink because the house rule is a limit on
+ * a person's total drinks per day, which lives in DEFAULT_SETTINGS below.
+ */
 const DEFAULT_DRINKS = [
-  { name: 'Monster',        emoji: '👹', category: 'energy',  par_level: 48, case_size: 24, daily_limit: 2,    sort_order: 10 },
-  { name: 'Parried',        emoji: '⚡', category: 'energy',  par_level: 36, case_size: 12, daily_limit: 2,    sort_order: 20 },
-  { name: 'BioSteel',       emoji: '💧', category: 'sports',  par_level: 36, case_size: 12, daily_limit: 3,    sort_order: 30 },
-  { name: 'Diet Soda',      emoji: '🥤', category: 'soda',    par_level: 48, case_size: 24, daily_limit: 3,    sort_order: 40 },
-  { name: 'Protein Shake',  emoji: '🥛', category: 'protein', par_level: 24, case_size: 12, daily_limit: 2,    sort_order: 50 },
-  { name: 'Sparkling Water', emoji: '🫧', category: 'water',  par_level: 48, case_size: 24, daily_limit: null, sort_order: 60 },
+  { name: 'Monster',       emoji: '👹', category: 'energy',  par_level: 48, case_size: 24, daily_limit: null, sort_order: 10 },
+  { name: 'Perrier',       emoji: '🫧', category: 'water',   par_level: 48, case_size: 24, daily_limit: null, sort_order: 20 },
+  { name: 'BioSteel',      emoji: '💧', category: 'sports',  par_level: 36, case_size: 12, daily_limit: null, sort_order: 30 },
+  { name: 'Diet Soda',     emoji: '🥤', category: 'soda',    par_level: 48, case_size: 24, daily_limit: null, sort_order: 40 },
+  { name: 'Protein Shake', emoji: '🥛', category: 'protein', par_level: 24, case_size: 12, daily_limit: null, sort_order: 50 },
 ];
+
+const DEFAULT_SETTINGS = {
+  // Drinks one person can take per day before the app asks "are you sure?".
+  // A nudge, never a block. Change it from the dashboard.
+  daily_total_limit: '2',
+};
 
 export function openDb(path = process.env.MAMI_DB || 'data/mami.db') {
   if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });
@@ -88,4 +104,22 @@ export function seedDrinks(db, drinks = DEFAULT_DRINKS) {
   return drinks.length;
 }
 
-export { DEFAULT_DRINKS };
+/** Fill in any setting the database doesn't have yet, leaving existing ones alone. */
+export function seedSettings(db, settings = DEFAULT_SETTINGS) {
+  const insert = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
+  for (const [key, value] of Object.entries(settings)) insert.run(key, String(value));
+}
+
+export function getSetting(db, key, fallback = null) {
+  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
+  return row ? row.value : fallback;
+}
+
+export function setSetting(db, key, value) {
+  db.prepare(
+    `INSERT INTO settings (key, value) VALUES (?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value`
+  ).run(key, String(value));
+}
+
+export { DEFAULT_DRINKS, DEFAULT_SETTINGS };

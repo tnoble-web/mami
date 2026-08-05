@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   dayKey, hourOf, isWorkday, shiftDay, dayRange,
-  rateFor, projectRunout, stockStatus, limitCheck, report,
+  rateFor, projectRunout, stockStatus, limitCheck, dailyTotalCheck, report,
 } from '../src/stats.js';
 
 /* ---------- day arithmetic ---------- */
@@ -118,6 +118,42 @@ test('stockStatus escalates from ok to out', () => {
 
 /* ---------- soft limits ---------- */
 
+test('the daily total nudges on the drink that reaches the limit', () => {
+  assert.deepEqual(dailyTotalCheck({ limit: 2, takenToday: 0 }),
+    { overLimit: false, remaining: 1, message: null });
+
+  const atLimit = dailyTotalCheck({ limit: 2, takenToday: 1 });
+  assert.equal(atLimit.overLimit, false);
+  assert.equal(atLimit.remaining, 0);
+  assert.match(atLimit.message, /That's 2 for today — your limit\./);
+});
+
+test('the daily total flags an overage without blocking it', () => {
+  const over = dailyTotalCheck({ limit: 2, takenToday: 2 });
+  assert.equal(over.overLimit, true);
+  assert.equal(over.remaining, 0);
+  assert.match(over.message, /already had 2 drinks today\. The limit is 2 a day\./);
+
+  // Singular reads correctly too.
+  assert.match(dailyTotalCheck({ limit: 1, takenToday: 1 }).message, /had 1 drink today/);
+});
+
+test('a limit of zero still only nudges', () => {
+  const check = dailyTotalCheck({ limit: 0, takenToday: 0 });
+  assert.equal(check.overLimit, true);
+  assert.match(check.message, /the limit is 0 drinks a day/);
+});
+
+test('no daily total means no nudge at all', () => {
+  assert.deepEqual(dailyTotalCheck({ limit: null, takenToday: 12 }),
+    { overLimit: false, message: null });
+});
+
+test('a multi-unit take is checked against the daily total as a whole', () => {
+  assert.equal(dailyTotalCheck({ limit: 2, takenToday: 0, qty: 3 }).overLimit, true);
+  assert.equal(dailyTotalCheck({ limit: 2, takenToday: 0, qty: 2 }).overLimit, false);
+});
+
 test('limitCheck nudges but never blocks', () => {
   const drink = { name: 'Monster', daily_limit: 2 };
 
@@ -185,7 +221,28 @@ test('report ranks the shopping list by urgency and sizes it in cases', () => {
   assert.equal(monster.cases, 2);
 
   assert.equal(r.shoppingList[0].name, 'Monster', 'most urgent drink comes first');
-  assert.equal(r.totals.needsRestock, 2);
+  // Sparkling Water is 46 of 48 — a two-bottle top-up isn't worth a shopping trip.
+  assert.equal(r.shoppingList.length, 1);
+  assert.equal(r.totals.needsRestock, 1);
+});
+
+test('a well-stocked drink only joins the shopping list once it needs half a case', () => {
+  const base = { id: 1, name: 'BioSteel', emoji: '💧', category: 'sports', par_level: 36, case_size: 12, daily_limit: null };
+  const listFor = (stock) => report({
+    drinks: [{ ...base, stock }],
+    takes: buildTakes({ drinkId: 1, personId: 1, perWorkday: 1 }),
+    people: [{ id: 1, name: 'Ada' }],
+    now: NOW, tz: 'UTC', windowDays: 14,
+  }).shoppingList;
+
+  assert.equal(listFor(35).length, 0, 'one bottle short of a full shelf: skip it');
+  assert.equal(listFor(31).length, 0, 'five short is still under half a case');
+  assert.equal(listFor(30).length, 1, 'six short is half a case, so buy one');
+
+  // Running low overrides the half-case rule entirely.
+  const low = listFor(4);
+  assert.equal(low.length, 1);
+  assert.equal(low[0].status, 'low');
 });
 
 test('report attributes consumption per person against a fair share', () => {
@@ -203,6 +260,37 @@ test('report attributes consumption per person against a fair share', () => {
   assert.equal(r.people[1].windowTotal, 10);
   assert.equal(r.totals.inWindow, 40);
   assert.equal(r.totals.fairShare, 20);
+});
+
+test('report counts how many days each person went past the limit', () => {
+  const drinks = [{ id: 1, name: 'Monster', emoji: '👹', category: 'energy', stock: 20, par_level: 48, case_size: 24, daily_limit: null }];
+  // Ada takes 3 a day (over a limit of 2); Grace takes 1.
+  const takes = [
+    ...buildTakes({ drinkId: 1, personId: 1, perWorkday: 3 }),
+    ...buildTakes({ drinkId: 1, personId: 2, perWorkday: 1 }),
+  ];
+  const people = [{ id: 1, name: 'Ada' }, { id: 2, name: 'Grace' }];
+
+  const r = report({
+    drinks, takes, people, now: NOW, tz: 'UTC', windowDays: 14, dailyTotalLimit: 2,
+  });
+
+  assert.equal(r.dailyTotalLimit, 2);
+  assert.equal(r.people.find((p) => p.name === 'Ada').overLimitDays, 10,
+    'over the limit on all ten workdays in the window');
+  assert.equal(r.people.find((p) => p.name === 'Grace').overLimitDays, 0);
+  assert.equal(r.totals.overLimitDays, 10);
+});
+
+test('report reports no overages when no limit is set', () => {
+  const drinks = [{ id: 1, name: 'Monster', emoji: '👹', category: 'energy', stock: 20, par_level: 48, case_size: 24, daily_limit: null }];
+  const takes = buildTakes({ drinkId: 1, personId: 1, perWorkday: 9 });
+  const r = report({
+    drinks, takes, people: [{ id: 1, name: 'Ada' }], now: NOW, tz: 'UTC', windowDays: 14,
+  });
+
+  assert.equal(r.dailyTotalLimit, null);
+  assert.equal(r.totals.overLimitDays, 0);
 });
 
 test('report counts unlogged drinks from shelf counts', () => {

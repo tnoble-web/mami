@@ -130,6 +130,7 @@ export function stockStatus({ stock, par_level, workdaysLeft }) {
 export function report({
   drinks, takes, restocks = [], people = [],
   now = new Date(), tz = 'UTC', windowDays = 14, coverDays = 10,
+  dailyTotalLimit = null,
 }) {
   const todayKey = dayKey(now, tz);
   const windowStart = shiftDay(todayKey, -windowDays);
@@ -207,12 +208,23 @@ export function report({
   const peopleReports = people.map((p) => {
     const pd = byPersonDay.get(p.id) ?? new Map();
     const windowTotal = sumDays(pd, windowStart, todayKey);
+
+    // Days this person went past the house limit. Counted, never enforced —
+    // it's how you tell whether the limit is set somewhere sensible.
+    let overLimitDays = 0;
+    if (dailyTotalLimit !== null) {
+      for (const [key, qty] of pd) {
+        if (key >= windowStart && key <= todayKey && qty > dailyTotalLimit) overLimitDays++;
+      }
+    }
+
     return {
       id: p.id,
       name: p.name,
       today: sumDays(pd, todayKey, todayKey),
       windowTotal,
       perWorkday: round(windowTotal / Math.max(1, countWorkdays(windowStart, todayKey)), 2),
+      overLimitDays,
       byDrinkToday: Object.fromEntries(byPersonDrinkToday.get(p.id) ?? []),
     };
   }).sort((a, b) => b.windowTotal - a.windowTotal);
@@ -234,8 +246,12 @@ export function report({
   const honesty = audits === 0 ? null
     : round(auditedLogged / Math.max(1, auditedLogged + unlogged), 3);
 
+  // Worth a trip to the shop: anything running low, plus well-stocked drinks
+  // only once the gap is at least half a case. Drinks are bought by the case, so
+  // "buy 1 BioSteel" is noise on a shopping list, not information.
   const shoppingList = drinkReports
-    .filter((d) => d.recommend > 0)
+    .filter((d) => d.recommend > 0
+      && (d.status !== 'ok' || d.recommend * 2 >= d.case_size))
     .sort((a, b) => statusRank(a.status) - statusRank(b.status)
       || (a.workdaysLeft ?? 999) - (b.workdaysLeft ?? 999));
 
@@ -245,6 +261,7 @@ export function report({
     tz,
     windowDays,
     coverDays,
+    dailyTotalLimit,
     drinks: drinkReports,
     people: peopleReports,
     shoppingList,
@@ -253,6 +270,7 @@ export function report({
       today: drinkReports.reduce((s, d) => s + d.takenToday, 0),
       inWindow: totalInWindow,
       fairShare,
+      overLimitDays: peopleReports.reduce((s, p) => s + p.overLimitDays, 0),
       stock: drinkReports.reduce((s, d) => s + d.stock, 0),
       unlogged,
       audits,
@@ -264,9 +282,43 @@ export function report({
 }
 
 /**
- * Soft limit check. Never blocks — it returns the nudge the UI should show, and
- * the caller logs the take either way. A hard block just teaches people to take
- * the drink without logging it, which is worse than an honest overage.
+ * The house rule: how many drinks one person takes per day, all kinds counted
+ * together. This is the limit that actually governs how fast the fridge empties
+ * — a per-drink cap of two still allows ten drinks a day across five shelves.
+ *
+ * Like every limit here it only ever nudges. Never blocks.
+ */
+export function dailyTotalCheck({ limit, takenToday, qty = 1 }) {
+  if (limit === null || limit === undefined) return { overLimit: false, message: null };
+  const after = takenToday + qty;
+
+  if (after <= limit) {
+    const remaining = limit - after;
+    return {
+      overLimit: false,
+      remaining,
+      message: remaining === 0
+        ? `That's ${after} for today — your limit.`
+        : null,
+    };
+  }
+
+  return {
+    overLimit: true,
+    remaining: 0,
+    message: takenToday === 0
+      ? `Heads up: the limit is ${limit} drinks a day.`
+      : `You've already had ${takenToday} drink${takenToday === 1 ? '' : 's'} today. The limit is ${limit} a day.`,
+  };
+}
+
+/**
+ * Optional per-drink cap, on top of the daily total ("at most one Monster, even
+ * within your two drinks"). Unset on every drink by default.
+ *
+ * Never blocks either — it returns the nudge the UI should show, and the caller
+ * logs the take regardless. A hard block just teaches people to take the drink
+ * without logging it, which is worse than an honest overage.
  */
 export function limitCheck({ drink, takenToday, qty = 1 }) {
   const limit = drink.daily_limit;

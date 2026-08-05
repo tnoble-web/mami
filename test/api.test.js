@@ -23,7 +23,8 @@ after(async () => {
 beforeEach(() => {
   // Reset the mutable state between tests; the seeded drink list stays.
   db.exec('DELETE FROM takes; DELETE FROM restocks; DELETE FROM people');
-  db.exec('UPDATE drinks SET stock = 24');
+  db.exec('UPDATE drinks SET stock = 24, daily_limit = NULL');
+  db.exec("UPDATE settings SET value = '2' WHERE key = 'daily_total_limit'");
 });
 
 async function call(method, path, body) {
@@ -56,7 +57,7 @@ test('a fresh fridge is seeded with the drinks the office stocks', async () => {
   const { status, payload } = await get('/api/state');
   assert.equal(status, 200);
   const names = payload.drinks.map((d) => d.name);
-  for (const expected of ['Monster', 'Parried', 'BioSteel', 'Diet Soda', 'Protein Shake']) {
+  for (const expected of ['Monster', 'Perrier', 'BioSteel', 'Diet Soda', 'Protein Shake']) {
     assert.ok(names.includes(expected), `missing ${expected}`);
   }
 });
@@ -124,10 +125,10 @@ test('unknown people and drinks are rejected', async () => {
 
 test('quantity is clamped to a sane range', async () => {
   const ada = await addPerson('Ada');
-  const water = drinkNamed((await get('/api/state')).payload.drinks, 'Sparkling Water');
+  const perrier = drinkNamed((await get('/api/state')).payload.drinks, 'Perrier');
 
   const { payload } = await post('/api/takes', {
-    person_id: ada.id, drink_id: water.id, qty: 9999,
+    person_id: ada.id, drink_id: perrier.id, qty: 9999, acknowledged: true,
   });
   assert.equal(payload.take.qty, 12, 'clamped to 12, not 9999');
 });
@@ -147,10 +148,18 @@ test('stock never goes negative even when the app has lost count', async () => {
 
 /* ---------- soft limits ---------- */
 
-test('a take over the daily limit asks first and is not logged yet', async () => {
+test('the fridge starts with a house limit of two drinks a day', async () => {
+  const state = await get('/api/state');
+  assert.equal(state.payload.dailyLimit, 2);
+  // The house total is the rule; per-drink caps are opt-in extras.
+  for (const drink of state.payload.drinks) {
+    assert.equal(drink.daily_limit, null, `${drink.name} should have no per-drink cap`);
+  }
+});
+
+test('a take over the house limit asks first and is not logged yet', async () => {
   const ada = await addPerson('Ada');
   const monster = drinkNamed((await get('/api/state')).payload.drinks, 'Monster');
-  assert.equal(monster.daily_limit, 2);
 
   await post('/api/takes', { person_id: ada.id, drink_id: monster.id });
   await post('/api/takes', { person_id: ada.id, drink_id: monster.id });
@@ -159,10 +168,29 @@ test('a take over the daily limit asks first and is not logged yet', async () =>
   assert.equal(third.status, 200);
   assert.equal(third.payload.logged, false);
   assert.equal(third.payload.needsConfirm, true);
-  assert.match(third.payload.limit.message, /limit is 2/);
+  assert.equal(third.payload.limit.scope, 'day');
+  assert.match(third.payload.limit.message, /already had 2 drinks today.*limit is 2 a day/);
 
   const state = await get(`/api/state?person_id=${ada.id}`);
   assert.equal(state.payload.me.today, 2, 'the unconfirmed take was not recorded');
+});
+
+test('the limit counts every kind of drink together', async () => {
+  const ada = await addPerson('Ada');
+  const drinks = (await get('/api/state')).payload.drinks;
+
+  // One Monster and one Perrier is already two drinks.
+  const first = await post('/api/takes', { person_id: ada.id, drink_id: drinks[0].id });
+  const second = await post('/api/takes', { person_id: ada.id, drink_id: drinks[1].id });
+  assert.equal(first.status, 201);
+  assert.equal(second.status, 201);
+  assert.equal(second.payload.takenTodayTotal, 2);
+  assert.equal(second.payload.takenToday, 1, 'one of that particular drink');
+  assert.match(second.payload.limit.message, /your limit/);
+
+  // A third drink of a completely different kind still trips the rule.
+  const third = await post('/api/takes', { person_id: ada.id, drink_id: drinks[2].id });
+  assert.equal(third.payload.needsConfirm, true);
 });
 
 test('an acknowledged take over the limit is always logged', async () => {
@@ -178,7 +206,7 @@ test('an acknowledged take over the limit is always logged', async () => {
   assert.equal(third.status, 201);
   assert.equal(third.payload.logged, true);
   assert.equal(third.payload.take.over_limit, 1, 'flagged as an overage, but recorded');
-  assert.equal(third.payload.takenToday, 3);
+  assert.equal(third.payload.takenTodayTotal, 3);
 });
 
 test('limits are per person, not per fridge', async () => {
@@ -193,15 +221,49 @@ test('limits are per person, not per fridge', async () => {
   assert.equal(graceFirst.status, 201, "Ada's limit must not block Grace");
 });
 
-test('a drink with no limit never asks for confirmation', async () => {
+test('the house limit can be changed, and turned off entirely', async () => {
   const ada = await addPerson('Ada');
-  const water = drinkNamed((await get('/api/state')).payload.drinks, 'Sparkling Water');
-  assert.equal(water.daily_limit, null);
+  const monster = drinkNamed((await get('/api/state')).payload.drinks, 'Monster');
 
-  for (let i = 0; i < 5; i++) {
-    const res = await post('/api/takes', { person_id: ada.id, drink_id: water.id });
-    assert.equal(res.status, 201);
+  const raised = await call('PATCH', '/api/settings', { daily_total_limit: 4 });
+  assert.equal(raised.status, 200);
+  assert.equal(raised.payload.dailyLimit, 4);
+  for (let i = 0; i < 4; i++) {
+    const res = await post('/api/takes', { person_id: ada.id, drink_id: monster.id });
+    assert.equal(res.status, 201, `drink ${i + 1} should be under a limit of 4`);
   }
+  assert.equal((await post('/api/takes', { person_id: ada.id, drink_id: monster.id })).payload.needsConfirm, true);
+
+  const off = await call('PATCH', '/api/settings', { daily_total_limit: null });
+  assert.equal(off.payload.dailyLimit, null);
+  for (let i = 0; i < 4; i++) {
+    const res = await post('/api/takes', { person_id: ada.id, drink_id: monster.id });
+    assert.equal(res.status, 201, 'with no limit set, nothing should ask');
+  }
+});
+
+test('a nonsense house limit is rejected', async () => {
+  assert.equal((await call('PATCH', '/api/settings', { daily_total_limit: -1 })).status, 400);
+  assert.equal((await call('PATCH', '/api/settings', { daily_total_limit: 'lots' })).status, 400);
+  assert.equal((await get('/api/state')).payload.dailyLimit, 2, 'unchanged after a bad request');
+});
+
+test('a per-drink cap applies on top of the house limit', async () => {
+  const ada = await addPerson('Ada');
+  const monster = drinkNamed((await get('/api/state')).payload.drinks, 'Monster');
+  const perrier = drinkNamed((await get('/api/state')).payload.drinks, 'Perrier');
+
+  await call('PATCH', '/api/settings', { daily_total_limit: 4 });
+  await call('PATCH', `/api/drinks/${monster.id}`, { daily_limit: 1 });
+
+  assert.equal((await post('/api/takes', { person_id: ada.id, drink_id: monster.id })).status, 201);
+
+  const secondMonster = await post('/api/takes', { person_id: ada.id, drink_id: monster.id });
+  assert.equal(secondMonster.payload.needsConfirm, true, 'one Monster a day');
+  assert.equal(secondMonster.payload.limit.scope, 'drink');
+
+  // Still well inside the house total, so another kind is fine.
+  assert.equal((await post('/api/takes', { person_id: ada.id, drink_id: perrier.id })).status, 201);
 });
 
 /* ---------- undo ---------- */
@@ -444,6 +506,14 @@ test('an admin token gates fridge configuration but never check-in', async () =>
       body: JSON.stringify({ name: 'Sneaky Soda' }),
     });
     assert.equal(allowed.status, 201);
+
+    // The house limit is configuration too, so it sits behind the same gate.
+    const limitDenied = await fetch(`${guarded}/api/settings`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ daily_total_limit: 99 }),
+    });
+    assert.equal(limitDenied.status, 401);
 
     // Checking in must still work for everyone.
     const person = await fetch(`${guarded}/api/people`, {

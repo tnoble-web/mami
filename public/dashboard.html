@@ -96,6 +96,15 @@
       <option value="10" selected>2 weeks</option>
       <option value="20">4 weeks</option>
     </select>
+    <label for="limit-select">Daily limit per person</label>
+    <select id="limit-select">
+      <option value="1">1 drink</option>
+      <option value="2">2 drinks</option>
+      <option value="3">3 drinks</option>
+      <option value="4">4 drinks</option>
+      <option value="6">6 drinks</option>
+      <option value="">no limit</option>
+    </select>
   </div>
 
   <div class="tiles" id="tiles"></div>
@@ -151,6 +160,10 @@
   <form id="edit-form">
     <h2 id="edit-title">Adjust drink</h2>
     <label class="field">
+      <span>Name</span>
+      <input id="edit-name" type="text" maxlength="40" required>
+    </label>
+    <label class="field">
       <span>In the fridge right now</span>
       <input id="edit-stock" type="number" inputmode="numeric" min="0" max="100000" step="1" required>
     </label>
@@ -163,9 +176,12 @@
       <input id="edit-case" type="number" inputmode="numeric" min="1" max="1000" step="1" required>
     </label>
     <label class="field">
-      <span>Soft daily limit per person <em>(blank for none)</em></span>
+      <span>Extra cap on this drink alone <em>(blank for none)</em></span>
       <input id="edit-limit" type="number" inputmode="numeric" min="0" max="99" step="1">
-      <small>A nudge, never a block — people can always take one anyway.</small>
+      <small>
+        Optional, and on top of the house limit above — use it for something like
+        "one Monster a day, even within your two drinks". A nudge, never a block.
+      </small>
     </label>
     <p id="edit-error" class="error" role="alert" hidden></p>
     <div class="sheet-actions">

@@ -7,7 +7,7 @@
  *
  * Refuses to touch a database that already has real check-ins unless --force.
  */
-import { openDb, seedDrinks } from '../src/db.js';
+import { openDb, seedDrinks, seedSettings, getSetting } from '../src/db.js';
 import { dayKey } from '../src/stats.js';
 
 const TZ = process.env.MAMI_TZ || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
@@ -15,6 +15,10 @@ const force = process.argv.includes('--force');
 const dbPath = process.env.MAMI_DB || 'data/demo.db';
 const db = openDb(dbPath);
 seedDrinks(db);
+seedSettings(db);
+
+const houseLimit = Number.parseInt(getSetting(db, 'daily_total_limit', ''), 10);
+const HOUSE_LIMIT = Number.isFinite(houseLimit) ? houseLimit : null;
 
 const existing = db.prepare('SELECT COUNT(*) AS n FROM takes').get().n;
 if (existing > 0 && !force) {
@@ -38,12 +42,11 @@ const drinks = db.prepare('SELECT * FROM drinks WHERE active = 1').all();
 
 // Relative appetite per drink, and who leans on what.
 const weight = {
-  Monster: 5, Parried: 3.5, BioSteel: 2.5, 'Diet Soda': 4,
-  'Protein Shake': 1.5, 'Sparkling Water': 2,
+  Monster: 5, Perrier: 3.5, BioSteel: 2.5, 'Diet Soda': 4, 'Protein Shake': 1.5,
 };
 const favourite = {
   Ada: 'Monster', Grace: 'Diet Soda', Linus: 'Monster',
-  Margaret: 'Parried', Alan: 'BioSteel', Radia: 'Sparkling Water',
+  Margaret: 'Perrier', Alan: 'BioSteel', Radia: 'Perrier',
 };
 
 const addTake = db.prepare(
@@ -84,10 +87,13 @@ for (let back = DAYS; back >= 0; back--) {
       const at = utcForLocal(day, hour, Math.floor(random() * 60));
       if (at > now) continue;
 
-      const takenSoFar = countToday(person.id, drink.id, at);
-      const overLimit = drink.daily_limit !== null && takenSoFar >= drink.daily_limit;
+      // The house rule counts a person's drinks for the day, all kinds together.
+      const totalSoFar = countTotalToday(person.id, at);
+      const perDrinkSoFar = countToday(person.id, drink.id, at);
+      const overLimit = (HOUSE_LIMIT !== null && totalSoFar >= HOUSE_LIMIT)
+        || (drink.daily_limit !== null && perDrinkSoFar >= drink.daily_limit);
       // Someone occasionally goes over; most people stop at the nudge.
-      if (overLimit && random() > 0.35) continue;
+      if (overLimit && random() > 0.3) continue;
 
       addTake.run(person.id, drink.id, 1, overLimit ? 1 : 0, iso(at));
       noteToday(person.id, drink.id, at);
@@ -116,7 +122,7 @@ for (let back = DAYS; back >= 0; back--) {
 
 // Leave the fridge in a state worth looking at: a couple of drinks nearly out.
 db.prepare("UPDATE drinks SET stock = 3 WHERE name = 'Monster'").run();
-db.prepare("UPDATE drinks SET stock = 0 WHERE name = 'Parried'").run();
+db.prepare("UPDATE drinks SET stock = 0 WHERE name = 'Perrier'").run();
 
 function weightedPick(list) {
   const total = list.reduce((s, d) => s + (weight[d.name] ?? 1), 0);
@@ -156,9 +162,15 @@ function countToday(personId, drinkId, at) {
   return seenToday.get(`${personId}:${drinkId}:${dayKey(at, TZ)}`) ?? 0;
 }
 
+function countTotalToday(personId, at) {
+  return seenToday.get(`${personId}:*:${dayKey(at, TZ)}`) ?? 0;
+}
+
 function noteToday(personId, drinkId, at) {
-  const key = `${personId}:${drinkId}:${dayKey(at, TZ)}`;
-  seenToday.set(key, (seenToday.get(key) ?? 0) + 1);
+  const day = dayKey(at, TZ);
+  for (const key of [`${personId}:${drinkId}:${day}`, `${personId}:*:${day}`]) {
+    seenToday.set(key, (seenToday.get(key) ?? 0) + 1);
+  }
 }
 
 function currentStock(drinkId) {

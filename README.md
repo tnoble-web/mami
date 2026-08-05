@@ -14,11 +14,29 @@ Two rules shaped every design decision:
 login. One tap for your name (remembered on your phone), one tap for the drink.
 That's the whole flow.
 
-**Nothing ever blocks you from taking a drink.** Daily limits are nudges: go over
-and it asks "another Monster?", and if you say yes it records it and moves on. A
+**Nothing ever blocks you from taking a drink.** The limit is a nudge: go over and
+it asks "take another drink?", and if you say yes it records it and moves on. A
 hard cap would just push people to take drinks without logging them, which
 destroys the only data that makes restocking work. An honest overage beats a
 clean-looking number that's wrong.
+
+## The limit
+
+Out of the box: **2 drinks per person per day**, counting every kind together —
+a Monster and a Diet Soda and you're at your limit. That's the number that
+governs how fast the fridge empties. A per-drink cap of two sounds equivalent but
+isn't: across five shelves it permits ten drinks a day.
+
+The check-in screen shows your progress ("1 of 2 today"), so most of the
+reminding happens before anyone is told they're over. On the third drink it asks
+once, then records it and flags the day as an overage. The dashboard has a
+**days over** column per person — not to name and shame, but to tell you whether
+the limit is set somewhere realistic.
+
+Change the number (or switch it off) from the dropdown at the top of the
+dashboard — no code, no restart. Individual drinks can also carry their own extra
+cap on top, via **Adjust** in the stock table, for something like "one Monster a
+day even within your two drinks." Those start unset.
 
 ## Running it
 
@@ -132,7 +150,7 @@ against fixed dates instead of "whatever today is."
 npm test
 ```
 
-68 tests covering the forecasting rules, the API surface (including soft-limit
+79 tests covering the forecasting rules, the API surface (including limit
 behaviour, undo, shelf counts, path traversal, and oversized bodies), and the QR
 encoder.
 

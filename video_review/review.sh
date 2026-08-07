@@ -100,6 +100,29 @@ for ts in "${STAMPS[@]}"; do
   printf '  %s  (t=%ss)\n' "$name" "$ts"
 done
 
+# ------------------------------------------------------------- (b2) scene cuts
+# Real cut points beat guessing pacing from 12 sampled frames. Note the
+# scene filter logs via showinfo/metadata at info level, so -v error would
+# swallow it — read the metadata output on stdout instead.
+echo
+echo "--- SHOTS (scene threshold 0.15, flagging >4s)"
+ffmpeg -nostdin -v error -i "$VIDEO" -vf "select='gt(scene,0.15)',metadata=print:file=-" -f null - 2>/dev/null \
+  | grep -o 'pts_time:[0-9.]*' | cut -d: -f2 \
+  | python3 -c "
+import sys
+dur = float('$DURATION')
+cuts = [0.0] + [float(x) for x in sys.stdin if x.strip()] + [dur]
+prev, longest = cuts[0], []
+for i, c in enumerate(cuts[1:], 1):
+    d = c - prev
+    flag = '   <-- LONG (>4s)' if d > 4 else ''
+    if d > 4: longest.append(i)
+    print(f'  shot {i:2d}:  {prev:6.2f}s -> {c:6.2f}s   ({d:5.2f}s){flag}')
+    prev = c
+print(f'  {len(cuts)-1} shots, avg {dur/(len(cuts)-1):.2f}s')
+if longest: print(f'  shots over 4s: {longest}')
+" || echo "  (scene detection unavailable)"
+
 # ------------------------------------------------------------------- (c) audio
 WAV="$OUT/audio.wav"
 if [ -z "$ACODEC" ]; then
@@ -118,7 +141,10 @@ echo "  $(du -h "$WAV" | cut -f1)"
 # -------------------------------------------------------------- (d) transcript
 echo
 echo "--- TRANSCRIPT (faster-whisper ${WHISPER_MODEL}, cpu/int8)"
-python3 - "$WAV" "$OUT/transcript.txt" "$WHISPER_MODEL" <<'PY'
+# WHISPER_MODEL_PATH lets you point at a locally cached model directory when
+# the machine cannot reach huggingface.co to download one.
+set +e
+python3 - "$WAV" "$OUT/transcript.txt" "${WHISPER_MODEL_PATH:-$WHISPER_MODEL}" <<'PY'
 import sys, os
 wav, out_path, model_name = sys.argv[1], sys.argv[2], sys.argv[3]
 os.environ.setdefault("OMP_NUM_THREADS", "4")
@@ -141,10 +167,24 @@ if not lines:
 with open(out_path, "w") as fh:
     fh.write("\n".join(lines) + "\n")
 PY
+RC=$?
+set -e
+if [ $RC -ne 0 ]; then
+  echo
+  echo "  !! TRANSCRIPTION FAILED (exit $RC)."
+  echo "     Most common cause on a locked-down machine: the model download"
+  echo "     from huggingface.co is blocked by egress policy. Frames, audio"
+  echo "     and shot list above are still valid — only the transcript is"
+  echo "     missing. Point WHISPER_MODEL_PATH at a local model dir to fix."
+fi
 
 echo
 echo "=============================================================="
 echo "Frames:     $FRAMES"
 echo "Audio:      $WAV"
-echo "Transcript: $OUT/transcript.txt"
+if [ -s "$OUT/transcript.txt" ]; then
+  echo "Transcript: $OUT/transcript.txt"
+else
+  echo "Transcript: NOT PRODUCED — see the error above"
+fi
 echo "=============================================================="

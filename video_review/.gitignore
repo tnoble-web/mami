@@ -1,0 +1,4 @@
+# Review output — frames, audio and transcripts extracted from WIP footage.
+# Client video should never land in git. Only the script itself is tracked.
+*/
+!.gitignore

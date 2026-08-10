@@ -158,3 +158,17 @@ route around them.
   their contents. If the user wants a comparison, ask them to screen-record the
   reference and drop the file in — then it can go through `review.sh` like any
   other cut.
+- `drive.google.com` and `capcut.com` are blocked as well. **No shared link of
+  any kind can be opened** — dragging the file into the chat is the only channel
+  that works. When a file is too large to upload, have the user send a review
+  copy rather than the master; 720p is plenty, since frames are extracted at
+  360px anyway:
+
+  ```bash
+  ffmpeg -i in.mp4 -vf "scale=720:-2" -c:v libx264 -crf 28 \
+         -preset veryfast -c:a aac -b:a 96k review_copy.mp4
+  ```
+
+  A review copy supports every check except the delivery spec itself — ask for
+  the real export settings separately and judge those from what the user
+  reports.

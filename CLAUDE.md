@@ -90,6 +90,7 @@ price to any cut, however tempting the competitive angle.
 | 3 | Salon skit | Blake — "it's cash only" | **25–30s** | Replace the mid-roll website shot with app b-roll. |
 | 4 | Mobile service | **Shanlee** | **25s** | Tighten the first 5s; tap by second 8. |
 | 5 | Rideshare | **Alexander** (48s raw) | **30s max** | Most surgery. Restructure permitted and required. |
+| 6 | Talking head | **Carrie V** (41.5s raw) | **~25s** | Added after the original brief. Join + b-roll swap. |
 
 > The written brief has the creator names on rows 4 and 5 swapped. Shanlee's
 > file is the **mobile service** edit and Alexander's is the **rideshare** edit,
@@ -115,6 +116,22 @@ Per-video constraints that override the generic rubric:
    missing out" to the front as the hook, then the tip story, then the tap, then
    the close. Cut the watermarked section if it cannot be cleaned. Structure
    beats completeness.
+6. **Carrie V** (talking head) — 41.5s raw down to ~25s. Join her repeated back
+   half: cut from ~24.5s ("that is literally it") straight to ~35.8s ("it's free
+   to start"), then tighten. Her ~20s screen recording showing $0.00 and a
+   "Finish setup" banner must be replaced entirely with b-roll where an amount is
+   entered and a card actually taps. Her structure is **not** frozen, so
+   reordering lines is allowed.
+
+## Known cross-video issues
+
+- **End card animation.** Matt's and Carrie's end cards open on ~1s of blank
+  white before the logo resolves; Blake's takes ~2s with the text arriving before
+  the logo. **Shanlee's is correct** — fully formed in under 0.9s with no blank
+  frame. Reuse hers everywhere rather than re-fixing each one.
+- **B-roll continuity.** Several cuts intercut outdoor (bright green grass) and
+  indoor (wood floor) b-roll inside a single payment sequence. Pick one setup per
+  insert so it reads as one continuous demo.
 
 ## App b-roll spec
 

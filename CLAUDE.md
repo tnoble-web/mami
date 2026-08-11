@@ -42,10 +42,13 @@ readable? The payment moment — a card tapping the phone — must be clearly
 visible by the middle of the video. Check the screen is legible at 360px; if you
 cannot read it in the extracted frame, neither can a viewer on a phone.
 
-Every phone screen in the finished ads should be our own b-roll, so the amount
-(**$67.50**) and business name stay consistent across all five. A screen showing
-a different amount, a different business name, or a visibly different
-location/season is leftover footage that still needs replacing.
+Every phone screen in the finished ads should be our own b-roll so the amount and
+business name stay consistent across all five.
+
+**The amount is settled at $63.50 — this is closed, do not raise it.** The
+original brief said $67.50; the b-roll was shot at $63.50, the user has decided
+that is fine, and all five edits are consistent. Never flag the discrepancy
+again.
 
 **3. Pacing.** Flag every shot longer than 4 seconds (the script marks these).
 Call out anything that could be cut. **Length target is per-video, not a blanket
@@ -105,10 +108,9 @@ Per-video constraints that override the generic rubric:
    the website screen midway with app b-roll (app opens, amount typed, card taps,
    success screen). Everything else stays. Blake is also the live reference ad
    for caption style.
-4. **Shanlee** (mobile service) — the open is slow; tighten the first 5 seconds
-   so the tap lands by second 8. Insert b-roll at the payment beat. Her script
-   says "that'll be $40" out loud, so b-roll showing a different amount
-   contradicts the audio in this cut specifically.
+4. **Shanlee** (mobile service) — tap by second 8. The walk-up open stays: the
+   user tried trimming it, it read worse, and it establishes the business. The
+   time comes out of the middle instead. She says "that'll be $40" on camera.
 5. **Alexander** (rideshare) — move "if you haven't turned this on, you're
    missing out" to the front as the hook, then the tip story, then the tap, then
    the close. Cut the watermarked section if it cannot be cleaned. Structure

@@ -85,8 +85,12 @@ price to any cut, however tempting the competitive angle.
 | 1 | Makeup / skincare | April — glasses, headband, wood ceiling | **20s** | Nearly done. Replace every phone screen with b-roll. |
 | 2 | Direct to camera | Matt — grey shirt, brick kitchen | **~14s** | Trim at 14.2s (rest is black). Extend the pay moment to ~5s. |
 | 3 | Salon skit | Blake — "it's cash only" | **25–30s** | Replace the mid-roll website shot with app b-roll. |
-| 4 | Mobile service | Alexander | **25s** | Tighten the first 5s; tap by second 8. |
-| 5 | Rideshare | Shanlee (48s raw) | **30s max** | Most surgery. Restructure permitted and required. |
+| 4 | Mobile service | **Shanlee** | **25s** | Tighten the first 5s; tap by second 8. |
+| 5 | Rideshare | **Alexander** (48s raw) | **30s max** | Most surgery. Restructure permitted and required. |
+
+> The written brief has the creator names on rows 4 and 5 swapped. Shanlee's
+> file is the **mobile service** edit and Alexander's is the **rideshare** edit,
+> confirmed by the user. The table above is corrected; the brief is not.
 
 Per-video constraints that override the generic rubric:
 
@@ -101,11 +105,14 @@ Per-video constraints that override the generic rubric:
    the website screen midway with app b-roll (app opens, amount typed, card taps,
    success screen). Everything else stays. Blake is also the live reference ad
    for caption style.
-4. **Alexander** — the open is slow; tighten the first 5 seconds so the tap lands
-   by second 8. Insert b-roll at the payment beat.
-5. **Shanlee** — move "if you haven't turned this on, you're missing out" to the
-   front as the hook, then the tip story, then the tap, then the close. Cut the
-   watermarked section if it cannot be cleaned. Structure beats completeness.
+4. **Shanlee** (mobile service) — the open is slow; tighten the first 5 seconds
+   so the tap lands by second 8. Insert b-roll at the payment beat. Her script
+   says "that'll be $40" out loud, so b-roll showing a different amount
+   contradicts the audio in this cut specifically.
+5. **Alexander** (rideshare) — move "if you haven't turned this on, you're
+   missing out" to the front as the hook, then the tip story, then the tap, then
+   the close. Cut the watermarked section if it cannot be cleaned. Structure
+   beats completeness.
 
 ## App b-roll spec
 

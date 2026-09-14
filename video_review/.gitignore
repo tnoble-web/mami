@@ -1,0 +1,6 @@
+# Review output — frames, audio, transcripts and contact sheets extracted from
+# WIP client footage. None of it belongs in git. Allowlist the scripts only.
+*
+!.gitignore
+!review.sh
+!make_endcard_ref.py

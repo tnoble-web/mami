@@ -129,9 +129,11 @@ Per-video constraints that override the generic rubric:
   white before the logo resolves; Blake's takes ~2s with the text arriving before
   the logo. **Shanlee's is correct** — fully formed in under 0.9s with no blank
   frame. Reuse hers everywhere rather than re-fixing each one.
-- **B-roll continuity.** Several cuts intercut outdoor (bright green grass) and
-  indoor (wood floor) b-roll inside a single payment sequence. Pick one setup per
-  insert so it reads as one continuous demo.
+- **B-roll continuity — closed, do not flag again.** Several cuts intercut
+  outdoor (bright green grass) and indoor (wood floor) b-roll inside a single
+  payment sequence. This was raised repeatedly; the user has decided it does
+  not matter and does not want it called out anymore. Do not mention it in
+  future reviews, even when it is visibly present.
 
 ## App b-roll spec
 
